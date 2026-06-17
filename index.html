@@ -3,198 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liberty Formula | P4/9 Ecosystem</title>
+    <title>Liberty Formula // Pit Wall Control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&family=Saira+Condensed:wght@700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <div id="welcome-screen" class="welcome-overlay">
-        <div class="welcome-container">
-            <div class="brand-badge">P4/9 ECOSYSTEM</div>
-            <h1 class="welcome-title">LIBERTY FORMULA</h1>
-            <p class="welcome-subtitle">Выберите конфигурацию интерфейса для текущей сессии</p>
+    <header class="top-bar">
+        <div class="brand-section">
+            <span class="live-indicator">LIVE</span>
+            <h1 class="logo-text">LIBERTY <span>FORMULA</span></h1>
+        </div>
+        
+        <div class="track-timeline">
+            <span class="timeline-time digits">00:42:17</span>
+            <div class="timeline-bar">
+                <div class="timeline-progress" style="width: 32%;"></div>
+                <div class="timeline-car-dot" style="left: 32%;"></div>
+            </div>
+            <span class="timeline-laps digits">LAP 18/57</span>
+        </div>
+
+        <div class="controls-hub">
+            <div class="mode-selector">
+                <button class="mode-btn active" id="btn-spectator" onclick="setMode('spectator')">Spectator</button>
+                <button class="mode-btn" id="btn-pro" onclick="setMode('pro')">Pro PitWall</button>
+            </div>
+            <div class="session-badge">MONACO GP</div>
+        </div>
+    </header>
+
+    <main class="workspace-grid" id="workspace">
+        
+        <section class="left-column">
             
-            <div class="modes-grid">
-                <div class="mode-card" onclick="selectMode('spectator')">
-                    <div class="mode-icon">👁️</div>
-                    <h2 class="mode-name">Режим Зрителя</h2>
-                    <p class="mode-desc">Чистый интерфейс: трансляция на максимум, ключевой Live-тайминг и выбор любимого комментатора.</p>
-                    <button class="btn-action">Запустить поток</button>
+            <div class="video-container">
+                <div class="video-ratio-box">
+                    <div class="video-stream-placeholder">
+                        <div class="scanner-line"></div>
+                        <div class="stream-info">
+                            <span class="icon-play">▲</span>
+                            <p class="digits">MAIN FEED // FEED_ID_01_PROD</p>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="mode-card pro-card" onclick="selectMode('commentator')">
-                    <div class="mode-icon">🎙️</div>
-                    <h2 class="mode-name">Режим Комментатора</h2>
-                    <p class="mode-desc">Командный мостик: расширенная телеметрия OpenF1, детальные микросекторы, логи инцидентов и Delay Control.</p>
-                    <button class="btn-action btn-pro">Открыть мостик</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="main-dashboard" class="dashboard-layout hidden">
-        
-        <header class="top-bar">
-            <div class="logo-zone">
-                <span class="logo-main">LIBERTY</span>
-                <span class="logo-sub">FORMULA</span>
-                <span id="current-mode-badge" class="mode-status-badge">SPECTATOR</span>
-            </div>
-            
-            <div class="track-progress-container">
-                <div class="track-line">
-                    <div class="leader-dot" style="left: 45%;">
-                        <span class="dot-label">VER</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="session-status">
-                <span class="status-indicator live"></span>
-                <span class="status-text">LIVE • REPRÉSIMA</span>
-            </div>
-        </header>
-
-        <main class="workspace-grid" id="workspace">
-            
-            <section class="left-column">
-                <div class="card video-card">
-                    <div class="card-header">
-                        <h3>MAIN FEED (LIBERTY STREAM)</h3>
-                        <div class="window-controls"><span></span><span></span></div>
-                    </div>
-                    <div class="video-placeholder">
-                        <div class="play-overlay">Поток готовится к запуску на Render...</div>
-                    </div>
-                </div>
-
-                <div class="card controls-card">
-                    <div class="card-header">
-                        <h3>RECEPTACLE CONTROLS</h3>
-                    </div>
-                    <div class="controls-wrapper">
-                        <div class="control-group">
-                            <label>АУДИОДОРОЖКА / КАСТЕР</label>
-                            <div class="selector-buttons">
-                                <button class="select-btn active">P4/9 LIVE</button>
-                                <button class="select-btn">RedRace Стрим</button>
-                                <button class="select-btn">FX (Только моторы)</button>
-                            </div>
+                <div class="stream-control-panel">
+                    <div class="audio-selector">
+                        <span class="panel-label">AUDIO FEED:</span>
+                        <div class="audio-buttons">
+                            <button class="audio-btn active">MAIN TV</button>
+                            <button class="audio-btn">COMMENTATOR #1</button>
+                            <button class="audio-btn">TEAM RADIO (LEC)</button>
                         </div>
-
-                        <div class="control-group" id="delay-control-group">
-                            <div class="label-with-value">
-                                <label>DELAY CONTROL (СИНХРОНИЗАЦИЯ ТЕЛЕМЕТРИИ)</label>
-                                <span class="digits" id="delay-val">0.0s</span>
-                            </div>
-                            <input type="range" min="0" max="60" value="0" step="0.5" class="f1-slider" id="delay-slider" oninput="updateDelay(this.value)">
+                    </div>
+                    
+                    <div class="sync-delay-module">
+                        <span class="panel-label">DELAY SYNC:</span>
+                        <div class="sync-controls">
+                            <button class="sync-step">-0.5s</button>
+                            <span class="sync-value digits">0.00s</span>
+                            <button class="sync-step">+0.5s</button>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            <section class="right-column">
-                <div class="card timing-card">
-                    <div class="card-header">
-                        <h3>LIVE LEADERBOARD</h3>
-                        <span class="digits text-red">LAP 14/57</span>
+            <div class="fia-terminal pro-only">
+                <div class="panel-header">
+                    <h2>FIA RACE CONTROL NOTICES</h2>
+                    <span class="pulse-dot"></span>
+                </div>
+                <div class="terminal-rows">
+                    <div class="fia-row system">
+                        <span class="timestamp digits">15:02:11</span>
+                        <span class="message">TRACK CLEAR // DRS ENABLED</span>
                     </div>
-                    <div class="table-responsive">
-                        <table class="f1-table">
-                            <thead>
-                                <tr>
-                                    <th>POS</th>
-                                    <th>DRIVER</th>
-                                    <th>GAP</th>
-                                    <th>TYRE</th>
-                                    <th class="pro-feature">S1</th>
-                                    <th class="pro-feature">S2</th>
-                                    <th class="pro-feature">S3</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="team-rbr">
-                                    <td class="digits">1</td>
-                                    <td class="driver-name"><b>VER</b> <span class="team-dot"></span></td>
-                                    <td class="digits text-purple">INTERVAL</td>
-                                    <td><span class="tyre-badge tyre-m">M<small>4</small></span></td>
-                                    <td class="pro-feature digits text-purple">27.1</td>
-                                    <td class="pro-feature digits text-green">31.4</td>
-                                    <td class="pro-feature digits">21.2</td>
-                                </tr>
-                                <tr class="team-ferrari">
-                                    <td class="digits">2</td>
-                                    <td class="driver-name"><b>LEC</b> <span class="team-dot"></span></td>
-                                    <td class="digits">+1.420</td>
-                                    <td><span class="tyre-badge tyre-m">M<small>4</small></span></td>
-                                    <td class="pro-feature digits text-green">27.3</td>
-                                    <td class="pro-feature digits">31.6</td>
-                                    <td class="pro-feature digits text-purple">21.0</td>
-                                </tr>
-                                <tr class="team-mercedes">
-                                    <td class="digits">3</td>
-                                    <td class="driver-name"><b>HAM</b> <span class="team-dot"></span></td>
-                                    <td class="digits">+5.890</td>
-                                    <td><span class="tyre-badge tyre-s">S<small>2</small></span></td>
-                                    <td class="pro-feature digits">27.5</td>
-                                    <td class="pro-feature digits">31.8</td>
-                                    <td class="pro-feature digits">21.5</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="fia-row track-limits">
+                        <span class="timestamp digits">15:05:44</span>
+                        <span class="message">LAP TIME DELETED – CAR 16 (LEC) – TURN 4 TRACK LIMITS</span>
+                    </div>
+                    <div class="fia-row investigation">
+                        <span class="timestamp digits">15:11:20</span>
+                        <span class="message">INCIDENT INVOLVING CAR 4 (NOR) AND CAR 1 (VER) NOTED – FORCING ANOTHER DRIVER OFF THE TRACK</span>
+                    </div>
+                    <div class="fia-row penalty">
+                        <span class="timestamp digits">15:14:02</span>
+                        <span class="message">5 SECOND TIME PENALTY IMPOSED TO CAR 4 (NOR) FOR CAUSING A COLLISION</span>
                     </div>
                 </div>
+            </div>
+        </section>
 
-                <div class="card news-card">
-                    <div class="card-header">
-                        <h3>REDRACE HUB</h3>
-                    </div>
-                    <div class="news-feed">
-                        <div class="news-item">
-                            <span class="news-time digits">14:02</span>
-                            <p class="news-text"><b>Леклер</b> сообщает команде по радио о странном поведении задней подвески на поребриках.</p>
-                        </div>
-                        <div class="news-item">
-                            <span class="news-time digits">13:55</span>
-                            <p class="news-text"><span class="text-red">🚨 INCIDENT:</span> Разворот Стролла в 4-м повороте. Вызваны желтые флаги в Секторе 2.</p>
-                        </div>
-                    </div>
+        <section class="right-column">
+            <div class="leaderboard-card">
+                <div class="panel-header">
+                    <h2>LIVE LEADERBOARD</h2>
+                    <span class="track-status green">TRACK GREEN</span>
                 </div>
-            </section>
-        </main>
-    </div>
+                
+                <div class="table-scroller">
+                    <table class="pitwall-table">
+                        <thead>
+                            <tr>
+                                <th class="center">POS</th>
+                                <th>DRIVER</th>
+                                <th>GAP</th>
+                                <th class="center">TYRE</th>
+                                <th class="pro-only right">S1</th>
+                                <th class="pro-only right">S2</th>
+                                <th class="pro-only right">S3</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="team-mclaren">
+                                <td class="pos digits">1</td>
+                                <td class="driver"><span class="team-stripe"></span><b>NOR</b><span class="team-fullname">L. Norris</span></td>
+                                <td class="gap digits purple-text">INTERVAL</td>
+                                <td class="tyre center"><span class="tyre-badge m">M<small>12</small></span></td>
+                                <td class="pro-only digits right purple-text">18.421</td>
+                                <td class="pro-only digits right yellow-text">34.112</td>
+                                <td class="pro-only digits right">20.551</td>
+                            </tr>
+                            <tr class="team-ferrari">
+                                <td class="pos digits">2</td>
+                                <td class="driver"><span class="team-stripe"></span><b>LEC</b><span class="team-fullname">C. Leclerc</span></td>
+                                <td class="gap digits">+1.184</td>
+                                <td class="tyre center"><span class="tyre-badge m">M<small>12</small></span></td>
+                                <td class="pro-only digits right yellow-text">18.550</td>
+                                <td class="pro-only digits right purple-text">33.998</td>
+                                <td class="pro-only digits right yellow-text">20.410</td>
+                            </tr>
+                            <tr class="team-mercedes">
+                                <td class="pos digits">3</td>
+                                <td class="driver"><span class="team-stripe"></span><b>RUS</b><span class="team-fullname">G. Russell</span></td>
+                                <td class="gap digits">+5.420</td>
+                                <td class="tyre center"><span class="tyre-badge s">S<small>4</small></span></td>
+                                <td class="pro-only digits right">18.612</td>
+                                <td class="pro-only digits right">34.340</td>
+                                <td class="pro-only digits right">20.690</td>
+                            </tr>
+                            <tr class="team-redbull">
+                                <td class="pos digits">4</td>
+                                <td class="driver"><span class="team-stripe"></span><b>VER</b><span class="team-fullname">M. Verstappen</span></td>
+                                <td class="gap digits">+6.115</td>
+                                <td class="tyre center"><span class="tyre-badge h">H<small>18</small></span></td>
+                                <td class="pro-only digits right">18.580</td>
+                                <td class="pro-only digits right">34.210</td>
+                                <td class="pro-only digits right">20.590</td>
+                            </tr>
+                            <tr class="team-audi">
+                                <td class="pos digits">5</td>
+                                <td class="driver"><span class="team-stripe"></span><b>HUL</b><span class="team-fullname">N. Hulkenberg</span></td>
+                                <td class="gap digits">+12.890</td>
+                                <td class="tyre center"><span class="tyre-badge m">M<small>14</small></span></td>
+                                <td class="pro-only digits right">18.820</td>
+                                <td class="pro-only digits right">34.690</td>
+                                <td class="pro-only digits right">20.880</td>
+                            </tr>
+                            <tr class="team-cadillac">
+                                <td class="pos digits">6</td>
+                                <td class="driver"><span class="team-stripe"></span><b>SAI</b><span class="team-fullname">C. Sainz</span></td>
+                                <td class="gap digits">+14.302</td>
+                                <td class="tyre center"><span class="tyre-badge s">S<small>6</small></span></td>
+                                <td class="pro-only digits right">18.790</td>
+                                <td class="pro-only digits right">34.810</td>
+                                <td class="pro-only digits right">20.910</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
 
     <script>
-        function selectMode(mode) {
-            const welcome = document.getElementById('welcome-screen');
-            const dashboard = document.getElementById('main-dashboard');
-            const badge = document.getElementById('current-mode-badge');
+        function setMode(mode) {
             const workspace = document.getElementById('workspace');
+            const btnSpec = document.getElementById('btn-spectator');
+            const btnPro = document.getElementById('btn-pro');
             
-            welcome.classList.add('fade-out');
-            
-            setTimeout(() => {
-                welcome.style.display = 'none';
-                dashboard.classList.remove('hidden');
-                
-                if(mode === 'spectator') {
-                    badge.innerText = 'SPECTATOR';
-                    badge.className = 'mode-status-badge badge-spec';
-                    workspace.classList.remove('mode-pro-active');
-                } else {
-                    badge.innerText = 'PRO BROADCASTER';
-                    badge.className = 'mode-status-badge badge-pro';
-                    workspace.classList.add('mode-pro-active');
-                }
-            }, 400);
-        }
-
-        function updateDelay(val) {
-            document.getElementById('delay-val').innerText = parseFloat(val).toFixed(1) + 's';
+            if (mode === 'pro') {
+                workspace.classList.add('mode-pro-active');
+                btnPro.classList.add('active');
+                btnSpec.classList.remove('active');
+            } else {
+                workspace.classList.remove('mode-pro-active');
+                btnSpec.classList.add('active');
+                btnPro.classList.remove('active');
+            }
         }
     </script>
 </body>
-                                  </html>
+</html>
