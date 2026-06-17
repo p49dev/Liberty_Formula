@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liberty Formula | P4/9 Ecosystem</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&family=Saira+Condensed:wght@700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="welcome-screen" class="welcome-overlay">
+        <div class="welcome-container">
+            <div class="brand-badge">P4/9 ECOSYSTEM</div>
+            <h1 class="welcome-title">LIBERTY FORMULA</h1>
+            <p class="welcome-subtitle">Выберите конфигурацию интерфейса для текущей сессии</p>
+            
+            <div class="modes-grid">
+                <div class="mode-card" onclick="selectMode('spectator')">
+                    <div class="mode-icon">👁️</div>
+                    <h2 class="mode-name">Режим Зрителя</h2>
+                    <p class="mode-desc">Чистый интерфейс: трансляция на максимум, ключевой Live-тайминг и выбор любимого комментатора.</p>
+                    <button class="btn-action">Запустить поток</button>
+                </div>
+                
+                <div class="mode-card pro-card" onclick="selectMode('commentator')">
+                    <div class="mode-icon">🎙️</div>
+                    <h2 class="mode-name">Режим Комментатора</h2>
+                    <p class="mode-desc">Командный мостик: расширенная телеметрия OpenF1, детальные микросекторы, логи инцидентов и Delay Control.</p>
+                    <button class="btn-action btn-pro">Открыть мостик</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-dashboard" class="dashboard-layout hidden">
+        
+        <header class="top-bar">
+            <div class="logo-zone">
+                <span class="logo-main">LIBERTY</span>
+                <span class="logo-sub">FORMULA</span>
+                <span id="current-mode-badge" class="mode-status-badge">SPECTATOR</span>
+            </div>
+            
+            <div class="track-progress-container">
+                <div class="track-line">
+                    <div class="leader-dot" style="left: 45%;">
+                        <span class="dot-label">VER</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="session-status">
+                <span class="status-indicator live"></span>
+                <span class="status-text">LIVE • REPRÉSIMA</span>
+            </div>
+        </header>
+
+        <main class="workspace-grid" id="workspace">
+            
+            <section class="left-column">
+                <div class="card video-card">
+                    <div class="card-header">
+                        <h3>MAIN FEED (LIBERTY STREAM)</h3>
+                        <div class="window-controls"><span></span><span></span></div>
+                    </div>
+                    <div class="video-placeholder">
+                        <div class="play-overlay">Поток готовится к запуску на Render...</div>
+                    </div>
+                </div>
+
+                <div class="card controls-card">
+                    <div class="card-header">
+                        <h3>RECEPTACLE CONTROLS</h3>
+                    </div>
+                    <div class="controls-wrapper">
+                        <div class="control-group">
+                            <label>АУДИОДОРОЖКА / КАСТЕР</label>
+                            <div class="selector-buttons">
+                                <button class="select-btn active">P4/9 LIVE</button>
+                                <button class="select-btn">RedRace Стрим</button>
+                                <button class="select-btn">FX (Только моторы)</button>
+                            </div>
+                        </div>
+
+                        <div class="control-group" id="delay-control-group">
+                            <div class="label-with-value">
+                                <label>DELAY CONTROL (СИНХРОНИЗАЦИЯ ТЕЛЕМЕТРИИ)</label>
+                                <span class="digits" id="delay-val">0.0s</span>
+                            </div>
+                            <input type="range" min="0" max="60" value="0" step="0.5" class="f1-slider" id="delay-slider" oninput="updateDelay(this.value)">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="right-column">
+                <div class="card timing-card">
+                    <div class="card-header">
+                        <h3>LIVE LEADERBOARD</h3>
+                        <span class="digits text-red">LAP 14/57</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="f1-table">
+                            <thead>
+                                <tr>
+                                    <th>POS</th>
+                                    <th>DRIVER</th>
+                                    <th>GAP</th>
+                                    <th>TYRE</th>
+                                    <th class="pro-feature">S1</th>
+                                    <th class="pro-feature">S2</th>
+                                    <th class="pro-feature">S3</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="team-rbr">
+                                    <td class="digits">1</td>
+                                    <td class="driver-name"><b>VER</b> <span class="team-dot"></span></td>
+                                    <td class="digits text-purple">INTERVAL</td>
+                                    <td><span class="tyre-badge tyre-m">M<small>4</small></span></td>
+                                    <td class="pro-feature digits text-purple">27.1</td>
+                                    <td class="pro-feature digits text-green">31.4</td>
+                                    <td class="pro-feature digits">21.2</td>
+                                </tr>
+                                <tr class="team-ferrari">
+                                    <td class="digits">2</td>
+                                    <td class="driver-name"><b>LEC</b> <span class="team-dot"></span></td>
+                                    <td class="digits">+1.420</td>
+                                    <td><span class="tyre-badge tyre-m">M<small>4</small></span></td>
+                                    <td class="pro-feature digits text-green">27.3</td>
+                                    <td class="pro-feature digits">31.6</td>
+                                    <td class="pro-feature digits text-purple">21.0</td>
+                                </tr>
+                                <tr class="team-mercedes">
+                                    <td class="digits">3</td>
+                                    <td class="driver-name"><b>HAM</b> <span class="team-dot"></span></td>
+                                    <td class="digits">+5.890</td>
+                                    <td><span class="tyre-badge tyre-s">S<small>2</small></span></td>
+                                    <td class="pro-feature digits">27.5</td>
+                                    <td class="pro-feature digits">31.8</td>
+                                    <td class="pro-feature digits">21.5</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card news-card">
+                    <div class="card-header">
+                        <h3>REDRACE HUB</h3>
+                    </div>
+                    <div class="news-feed">
+                        <div class="news-item">
+                            <span class="news-time digits">14:02</span>
+                            <p class="news-text"><b>Леклер</b> сообщает команде по радио о странном поведении задней подвески на поребриках.</p>
+                        </div>
+                        <div class="news-item">
+                            <span class="news-time digits">13:55</span>
+                            <p class="news-text"><span class="text-red">🚨 INCIDENT:</span> Разворот Стролла в 4-м повороте. Вызваны желтые флаги в Секторе 2.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        function selectMode(mode) {
+            const welcome = document.getElementById('welcome-screen');
+            const dashboard = document.getElementById('main-dashboard');
+            const badge = document.getElementById('current-mode-badge');
+            const workspace = document.getElementById('workspace');
+            
+            welcome.classList.add('fade-out');
+            
+            setTimeout(() => {
+                welcome.style.display = 'none';
+                dashboard.classList.remove('hidden');
+                
+                if(mode === 'spectator') {
+                    badge.innerText = 'SPECTATOR';
+                    badge.className = 'mode-status-badge badge-spec';
+                    workspace.classList.remove('mode-pro-active');
+                } else {
+                    badge.innerText = 'PRO BROADCASTER';
+                    badge.className = 'mode-status-badge badge-pro';
+                    workspace.classList.add('mode-pro-active');
+                }
+            }, 400);
+        }
+
+        function updateDelay(val) {
+            document.getElementById('delay-val').innerText = parseFloat(val).toFixed(1) + 's';
+        }
+    </script>
+</body>
+                                  </html>
