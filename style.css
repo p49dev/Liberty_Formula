@@ -511,3 +511,72 @@ body {
     50% { opacity: 1; }
     100% { opacity: 0.4; }
 }
+
+/* ==========================================================================
+   АДАПТАЦИЯ ПОД МОБИЛЬНЫЕ УСТРОЙСТВА (СМАРТФОНЫ И ПЛАНШЕТЫ)
+   ========================================================================== */
+@media (max-width: 992px) {
+    /* Снимаем жесткую фиксацию по высоте, разрешаем скролл вниз */
+    .dashboard-layout {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+    }
+
+    /* Ломаем сетку: теперь плеер и таблица стоят друг под другом */
+    .workspace-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Шапка перестраивается в колонку */
+    .top-bar {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+
+    /* Полоса трассы занимает всю ширину на мобилке */
+    .track-progress-container {
+        width: 100%;
+        padding: 0 10px;
+        margin: 5px 0;
+    }
+
+    .session-status {
+        align-self: flex-start;
+    }
+
+    /* Плеер не должен сплющиваться до 0 пикселей */
+    .video-placeholder {
+        min-height: 250px;
+    }
+
+    /* Стартовый экран: карточки выбора режима друг под другом */
+    .modes-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .welcome-title {
+        font-size: 3rem;
+    }
+
+    /* ТАБЛИЦА: чтобы данные не сжимались в кашу, делаем горизонтальный скролл */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 10px;
+    }
+    
+    .f1-table {
+        min-width: 500px; /* Минимальная ширина таблицы, чтобы колонки оставались красивыми */
+    }
+    
+    /* Кнопки выбора комментатора: разрешаем перенос на новую строку */
+    .selector-buttons {
+        flex-wrap: wrap;
+    }
+}
