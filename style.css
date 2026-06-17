@@ -1,582 +1,575 @@
 /* ==========================================================================
-   RESET & КОРНЕВЫЕ ПЕРЕМЕННЫЕ (F1 TV PALETTE)
+   ОБНУЛЕНИЕ ИБАЗОВЫЕ НАСТРОЙКИ
    ========================================================================== */
-:root {
-    --bg-main: #050505;          /* Почти чёрный идеальный гоночный фон */
-    --bg-card: #0D0D0D;          /* Контрастный фон карточек */
-    --accent-red: #FF1801;       /* Официальный агрессивный красный F1 */
-    --text-main: #FFFFFF;        /* Основной белый текст */
-    --text-muted: #8C8C8C;       /* Вторичный серый текст */
-    --border-color: #1A1A1A;     /* Минималистичные тонкие бордеры */
-    
-    /* Цвета команд для тайминга */
-    --rbr-blue: #0600EF;
-    --ferrari-red: #E60000;
-    --merc-cyan: #00D2BE;
-}
-
 * {
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
-}
-
-body {
-    background-color: var(--bg-main);
-    color: var(--text-main);
-    font-family: 'Inter', sans-serif;
-    overflow-x: hidden;
+    box-sizing: border-box;
     -webkit-font-smoothing: antialiased;
 }
 
-/* Стилизация цифр и таймингов */
+:root {
+    /* Палитра интерфейса (Премиальный Obsidian Dark) */
+    --bg-base: #040406;
+    --bg-surface: rgba(13, 13, 17, 0.75);
+    --bg-surface-solid: #0d0d11;
+    --border-light: rgba(255, 255, 255, 0.05);
+    --border-glow: rgba(225, 6, 0, 0.15);
+    
+    /* Текстовые цвета */
+    --text-pure: #ffffff;
+    --text-body: #9da0b0;
+    --text-muted: #525566;
+    
+    /* Сигнальные цвета FIA */
+    --f1-red: #e10600;
+    --f1-yellow: #ffd400;
+    --f1-green: #00d166;
+    --f1-purple: #b800ff;
+
+    /* ОФИЦИАЛЬНАЯ ПАЛИТРА КОМАНД СЕЗОНА 2026 */
+    --clr-mclaren: #ff8000;
+    --clr-ferrari: #ef1c24;
+    --clr-mercedes: #00a398;
+    --clr-redbull: #1e41ff;
+    --clr-aston: #006f62;
+    --clr-alpine: #ff87bc;
+    --clr-williams: #005aff;
+    --clr-audi: #ff0044;
+    --clr-haas: #ffffff;
+    --clr-rb: #0000ff;
+    --clr-cadillac: #c0c0c0;
+}
+
+body {
+    background-color: var(--bg-base);
+    color: var(--text-pure);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Стилизация шрифтов для цифр (чтобы сетка не прыгала при смене значений) */
 .digits {
     font-family: 'JetBrains Mono', monospace;
-    font-weight: 700;
-}
-
-/* Утилиты цвета */
-.text-red { color: var(--accent-red); }
-.text-purple { color: #B624FF; }
-.text-green { color: #00E676; }
-
-/* ==========================================================================
-   ЭКРАН ВЫБОРА РЕЖИМА (WELCOME SCREEN)
-   ========================================================================== */
-.welcome-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: radial-gradient(circle at center, #110302 0%, var(--bg-main) 70%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    transition: opacity 0.4s ease, transform 0.4s ease;
-}
-
-.welcome-overlay.fade-out {
-    opacity: 0;
-    transform: scale(1.02);
-    pointer-events: none;
-}
-
-.welcome-container {
-    text-align: center;
-    max-width: 900px;
-    padding: 20px;
-}
-
-.brand-badge {
-    display: inline-block;
-    background: rgba(255, 24, 1, 0.1);
-    border: 1px solid var(--accent-red);
-    color: var(--accent-red);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    padding: 4px 12px;
-    letter-spacing: 2px;
-    margin-bottom: 20px;
-}
-
-.welcome-title {
-    font-family: 'Saira Condensed', sans-serif;
-    font-weight: 800;
-    font-size: 4rem;
-    letter-spacing: -1px;
-    line-height: 0.9;
-    margin-bottom: 10px;
-}
-
-.welcome-subtitle {
-    color: var(--text-muted);
-    font-size: 1.1rem;
-    margin-bottom: 50px;
-}
-
-.modes-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-}
-
-.mode-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    padding: 40px 30px;
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    position: relative;
-}
-
-.mode-card:hover {
-    border-color: rgba(255, 255, 255, 0.3);
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.5);
-}
-
-.pro-card:hover {
-    border-color: var(--accent-red);
-}
-
-.mode-icon {
-    font-size: 2.5rem;
-    margin-bottom: 20px;
-}
-
-.mode-name {
-    font-family: 'Saira Condensed', sans-serif;
-    font-size: 1.8rem;
-    text-transform: uppercase;
-    margin-bottom: 15px;
-}
-
-.mode-desc {
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    line-height: 1.5;
-    margin-bottom: 35px;
-    min-height: 70px;
-}
-
-.btn-action {
-    width: 100%;
-    background: #FFFFFF;
-    color: #000000;
-    border: none;
-    padding: 12px;
-    font-family: 'Saira Condensed', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.mode-card:hover .btn-action {
-    background: var(--accent-red);
-    color: #FFFFFF;
-}
-
-.btn-pro {
-    background: transparent;
-    color: #FFFFFF;
-    border: 1px solid var(--border-color);
-}
-
-.mode-card:hover .btn-pro {
-    background: var(--accent-red);
-    border-color: var(--accent-red);
+    font-weight: 500;
 }
 
 /* ==========================================================================
-   ГЛАВНЫЙ ИНТЕРФЕЙС (DASHBOARD LAYOUT)
+   ВЕРХНЯЯ ИНЖЕНЕРНАЯ ПАНЕЛЬ (TOP BAR)
    ========================================================================== */
-.dashboard-layout {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    padding: 15px;
-}
-
-.hidden { display: none !important; }
-
-/* ШАПКА */
 .top-bar {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 15px;
-    margin-bottom: 15px;
-}
-
-.logo-zone {
+    height: 60px;
+    background: #09090c;
+    border-bottom: 1px solid var(--border-light);
     display: flex;
     align-items: center;
-    gap: 5px;
-}
-
-.logo-main {
-    font-family: 'Saira Condensed', sans-serif;
-    font-weight: 800;
-    font-size: 1.5rem;
-    letter-spacing: 0.5px;
-}
-
-.logo-sub {
-    font-family: 'Saira Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 1.5rem;
-    color: var(--accent-red);
-}
-
-.mode-status-badge {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    padding: 2px 8px;
-    margin-left: 15px;
-    border-radius: 2px;
-    font-weight: 700;
-}
-
-.badge-spec { background: #1A1A1A; color: #FFFFFF; }
-.badge-pro { background: var(--accent-red); color: #FFFFFF; }
-
-/* Интерактивный прогрессбар трассы */
-.track-progress-container {
-    padding: 0 40px;
-}
-
-.track-line {
-    height: 4px;
-    background: #1A1A1A;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 100;
     position: relative;
+}
+
+.brand-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.live-indicator {
+    background: var(--f1-red);
+    color: white;
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: 900;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    box-shadow: 0 0 10px rgba(225, 6, 0, 0.4);
+}
+
+.logo-text {
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: 900;
+    font-size: 1.3rem;
+    letter-spacing: -0.5px;
+    text-transform: uppercase;
+}
+
+.logo-text span {
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+/* Полоса прогресса трассы */
+.track-timeline {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+    max-width: 500px;
+    margin: 0 40px;
+}
+
+.timeline-time, .timeline-laps {
+    font-size: 12px;
+    color: var(--text-body);
+    white-space: nowrap;
+}
+
+.timeline-bar {
+    height: 4px;
+    background: #1f2029;
+    border-radius: 2px;
+    flex: 1;
+    position: relative;
+}
+
+.timeline-progress {
+    height: 100%;
+    background: var(--text-body);
     border-radius: 2px;
 }
 
-.leader-dot {
-    position: absolute;
-    top: 50%;
-    transform: translate(-50%, -50%);
+.timeline-car-dot {
     width: 8px;
     height: 8px;
-    background: var(--accent-red);
+    background: var(--f1-red);
     border-radius: 50%;
-    box-shadow: 0 0 10px var(--accent-red);
-}
-
-.dot-label {
     position: absolute;
-    top: -18px;
-    left: 50%;
+    top: -2px;
     transform: translateX(-50%);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
-    color: var(--text-muted);
+    box-shadow: 0 0 6px var(--f1-red);
 }
 
-.session-status {
+/* Управление и селекторы */
+.controls-hub {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 20px;
 }
 
-.status-indicator {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
+.mode-selector {
+    display: flex;
+    background: #14141a;
+    padding: 3px;
+    border-radius: 4px;
+    border: 1px solid var(--border-light);
 }
 
-.status-indicator.live {
-    background: var(--accent-red);
-    animation: pulse 1.5s infinite;
+.mode-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-body);
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s ease;
 }
 
-.status-text {
-    font-family: 'Saira Condensed', sans-serif;
-    font-size: 1.1rem;
+.mode-btn.active {
+    background: var(--f1-red);
+    color: white;
+}
+
+.session-badge {
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    background: rgba(255,255,255,0.05);
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border-light);
     letter-spacing: 0.5px;
 }
 
-/* РАБОЧАЯ СЕТКА */
+/* ==========================================================================
+   ГЛАВНАЯ ДИНАМИЧЕСКАЯ СЕТКА (РАБОЧЕЕ ПРОСТРАНСТВО)
+   ========================================================================== */
 .workspace-grid {
     display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
-    gap: 15px;
-    flex-grow: 1;
-    height: calc(100vh - 80px);
+    grid-template-columns: 2.8fr 1.2fr; /* По умолчанию режим Spectator: плеер доминирует */
+    height: calc(100vh - 60px);
+    gap: 1px; /* Тончайшие швы между блоками */
+    background: var(--border-light);
+    transition: grid-template-columns 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* ТРАНСФОРМАЦИЯ В РЕЖИМ PRO: Сетка плавно меняет пропорции */
+.workspace-grid.mode-pro-active {
+    grid-template-columns: 1.6fr 2.4fr;
 }
 
 .left-column, .right-column {
+    background: var(--bg-base);
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    height: 100%;
+    overflow: hidden;
 }
 
-/* КАРТОЧКИ ОБЩИЕ */
-.card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
+/* Скрытие PRO-элементов по умолчанию */
+.pro-only {
+    display: none !important;
+}
+
+/* Показ PRO-элементов при активации режима */
+.mode-pro-active .pro-only {
+    display: flex !important;
+}
+.mode-pro-active th.pro-only, 
+.mode-pro-active td.pro-only {
+    display: table-cell !important;
+}
+
+/* ==========================================================================
+   МОДУЛЬ ВИДЕОПЛЕЕРА И СИНХРОНИЗАЦИИ
+   ========================================================================== */
+.video-container {
+    background: #000;
     display: flex;
     flex-direction: column;
 }
 
-.card-header {
-    border-bottom: 1px solid var(--border-color);
-    padding: 10px 15px;
+.video-ratio-box {
+    width: 100%;
+    position: relative;
+    padding-top: 56.25%; /* Жесткий формат 16:9 */
+}
+
+.video-stream-placeholder {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, #0b0b0f 0%, #050507 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* Эффект сканирующей линии для киношности */
+.scanner-line {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 2px;
+    background: rgba(255, 255, 255, 0.02);
+    animation: scan 8s linear infinite;
+}
+
+@keyframes scan {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(500px); }
+}
+
+.stream-info {
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.icon-play {
+    font-size: 24px;
+    color: rgba(255,255,255,0.1);
+    display: block;
+    margin-bottom: 10px;
+    transform: rotate(90deg);
+}
+
+/* Панель стрим-контрола */
+.stream-control-panel {
+    background: #09090c;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border-light);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
-.card-header h3 {
-    font-family: 'Saira Condensed', sans-serif;
-    font-size: 1.1rem;
+.panel-label {
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--text-muted);
     letter-spacing: 0.5px;
-    color: var(--text-muted);
+    margin-right: 10px;
 }
 
-/* ВИДЕОПЛЕЕР */
-.video-card { flex-grow: 1; }
+.audio-buttons, .sync-controls {
+    display: inline-flex;
+    background: #14141a;
+    padding: 2px;
+    border-radius: 4px;
+    border: 1px solid var(--border-light);
+}
 
-.video-placeholder {
-    background: #010101;
-    width: 100%;
-    height: 100%;
-    flex-grow: 1;
+.audio-btn, .sync-step {
+    background: transparent;
+    border: none;
+    color: var(--text-body);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+.audio-btn.active {
+    background: rgba(255,255,255,0.08);
+    color: var(--text-pure);
+}
+
+.sync-value {
+    padding: 5px 15px;
+    font-size: 12px;
+    color: var(--f1-yellow);
+}
+
+/* ==========================================================================
+   ОФИЦИАЛЬНЫЙ СУДЕЙСКИЙ ТЕРМИНАЛ FIA (RACE CONTROL)
+   ========================================================================== */
+.fia-terminal {
+    flex: 1;
+    background: #070709;
+    border-top: 1px solid var(--border-light);
     display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
+    flex-direction: column;
 }
 
-.play-overlay {
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--text-muted);
+.panel-header {
+    height: 40px;
+    background: #0f0f14;
+    padding: 0 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.panel-header h2 {
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    color: var(--text-body);
+    text-transform: uppercase;
+}
+
+.pulse-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--f1-red);
+    border-radius: 50%;
+    animation: blink 1.2s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
+.terminal-rows {
+    padding: 10px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.fia-row {
+    display: flex;
+    align-items: flex-start;
+    background: #111116;
+    padding: 8px 12px;
+    border-radius: 2px;
+    border-left: 3px solid #333;
     font-size: 13px;
 }
 
-/* БЛОК НАСТРОЕК */
-.controls-wrapper {
-    padding: 15px;
+.fia-row .timestamp {
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-right: 15px;
+    padding-top: 1px;
+}
+
+.fia-row .message {
+    font-weight: 500;
+    letter-spacing: -0.1px;
+}
+
+/* Цветовые схемы сообщений по протоколам FIA */
+.fia-row.system { border-left-color: var(--f1-green); color: var(--f1-green); }
+.fia-row.track-limits { border-left-color: #ffffff; color: #ffffff; }
+.fia-row.investigation { border-left-color: var(--f1-yellow); color: var(--f1-yellow); }
+.fia-row.penalty { border-left-color: var(--f1-red); background: rgba(225, 6, 0, 0.05); color: #ffb3b3; }
+
+/* ==========================================================================
+   ТАБЛИЦА ЖИВОГО ТАЙМИНГА (LEADERBOARD)
+   ========================================================================== */
+.leaderboard-card {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    height: 100%;
 }
 
-.control-group label {
-    display: block;
-    font-family: 'Saira Condensed', sans-serif;
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-    letter-spacing: 0.5px;
-}
-
-.selector-buttons {
-    display: flex;
-    gap: 10px;
-}
-
-.select-btn {
-    background: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--text-main);
-    padding: 8px 16px;
-    font-family: 'Saira Condensed', sans-serif;
-    font-size: 1rem;
+.track-status {
+    font-family: 'Titillium Web', sans-serif;
     font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
+    font-size: 11px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 2px;
 }
 
-.select-btn.active, .select-btn:hover {
-    background: var(--accent-red);
-    border-color: var(--accent-red);
-    color: #FFFFFF;
+.track-status.green {
+    background: rgba(0, 209, 102, 0.1);
+    color: var(--f1-green);
+    border: 1px solid rgba(0, 209, 102, 0.2);
 }
 
-.label-with-value {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.table-scroller {
+    overflow-y: auto;
+    flex: 1;
 }
 
-.f1-slider {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 4px;
-    background: #1A1A1A;
-    outline: none;
-}
-
-.f1-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 12px;
-    height: 12px;
-    background: var(--accent-red);
-    cursor: pointer;
-    border-radius: 50%;
-}
-
-/* ТАБЛИЦА ТАЙМИНГА */
-.timing-card { flex-grow: 2; }
-
-.f1-table {
+.pitwall-table {
     width: 100%;
     border-collapse: collapse;
     text-align: left;
 }
 
-.f1-table th {
-    font-family: 'Saira Condensed', sans-serif;
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    padding: 10px 15px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.f1-table td {
-    padding: 12px 15px;
-    border-bottom: 1px solid #111111;
-    font-size: 13px;
-    vertical-align: middle;
-}
-
-.driver-name {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.team-dot {
-    width: 3px;
-    height: 14px;
-    display: inline-block;
-}
-
-/* Индивидуальные полоски команд */
-.team-rbr .team-dot { background: var(--rbr-blue); }
-.team-ferrari .team-dot { background: var(--ferrari-red); }
-.team-mercedes .team-dot { background: var(--merc-cyan); }
-
-/* Планшетки шин */
-.tyre-badge {
-    display: inline-block;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    text-align: center;
-    line-height: 20px;
-    font-family: 'JetBrains Mono', monospace;
+.pitwall-table th {
+    background: #09090c;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    font-family: 'Titillium Web', sans-serif;
     font-weight: 700;
     font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-light);
 }
-.tyre-m { border: 2px solid #FFD400; color: #FFD400; }
-.tyre-s { border: 2px solid #DA0000; color: #DA0000; }
-.tyre-badge small { font-size: 8px; margin-left: 1px; color: #FFF; }
 
-/* НОВОСТИ REDRACE */
-.news-card { flex-grow: 1; max-height: 250px; }
+.pitwall-table td {
+    padding: 8px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+    vertical-align: middle;
+    height: 42px;
+}
 
-.news-feed {
-    padding: 15px;
-    overflow-y: auto;
+/* Выравнивание */
+.center { text-align: center; }
+.right { text-align: right; }
+
+.pitwall-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.pitwall-table .pos {
+    font-weight: 700;
+    color: var(--text-body);
+    width: 40px;
+}
+
+.pitwall-table .driver {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
 }
 
-.news-item {
-    display: flex;
-    gap: 15px;
-    font-size: 13px;
-    line-height: 1.4;
+.pitwall-table .driver b {
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: 900;
+    letter-spacing: 0.5px;
 }
 
-.news-time {
-    color: var(--accent-red);
-    flex-shrink: 0;
+.team-fullname {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 400;
 }
 
-.news-text { color: #E0E0E0; }
+/* Вертикальная цветная полоса команды */
+.team-stripe {
+    width: 3px;
+    height: 16px;
+    border-radius: 1px;
+    display: inline-block;
+}
+
+.purple-text { color: var(--f1-purple); }
+.yellow-text { color: var(--f1-yellow); }
+
+/* Иконки комплектов шин */
+.tyre-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: 900;
+    font-size: 11px;
+    border: 2px solid transparent;
+}
+
+.tyre-badge small {
+    font-size: 8px;
+    font-weight: 400;
+    margin-left: 0.5px;
+    opacity: 0.8;
+}
+
+.tyre-badge.m { border-color: var(--f1-yellow); color: var(--f1-yellow); }
+.tyre-badge.s { border-color: var(--f1-red); color: var(--f1-red); }
+.tyre-badge.h { border-color: #ffffff; color: #ffffff; }
+
+/* Привязка официальных цветов к полосам команд */
+.team-mclaren .team-stripe { background: var(--clr-mclaren); }
+.team-ferrari .team-stripe { background: var(--clr-ferrari); }
+.team-mercedes .team-stripe { background: var(--clr-mercedes); }
+.team-redbull .team-stripe { background: var(--clr-redbull); }
+.team-audi .team-stripe { background: var(--clr-audi); }
+.team-cadillac .team-stripe { background: var(--clr-cadillac); }
 
 /* ==========================================================================
-   УПРАВЛЕНИЕ РЕЖИМАМИ (PRO ОПЦИИ)
+   КРАСИВЫЕ ИНЖЕНЕРНЫЕ СКРОЛЛБАРЫ
    ========================================================================== */
-/* По умолчанию про-элементы скрыты в режиме Spectator */
-.pro-feature, #delay-control-group {
-    display: none;
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
 }
-
-/* Когда активен про-режим, включаем отображение колонок */
-.mode-pro-active .pro-feature {
-    display: table-cell;
+::-webkit-scrollbar-track {
+    background: transparent;
 }
-.mode-pro-active th.pro-feature {
-    display: table-cell;
+::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
 }
-.mode-pro-active #delay-control-group {
-    display: block;
-}
-
-/* АНИМАЦИИ */
-@keyframes pulse {
-    0% { opacity: 0.4; }
-    50% { opacity: 1; }
-    100% { opacity: 0.4; }
+::-webkit-scrollbar-thumb:hover {
+    background: var(--f1-red);
 }
 
 /* ==========================================================================
-   АДАПТАЦИЯ ПОД МОБИЛЬНЫЕ УСТРОЙСТВА (СМАРТФОНЫ И ПЛАНШЕТЫ)
+   АДАПТАЦИЯ ПОД МОБИЛЬНЫЕ ТЕЛЕФОНЫ
    ========================================================================== */
 @media (max-width: 992px) {
-    /* Снимаем жесткую фиксацию по высоте, разрешаем скролл вниз */
-    .dashboard-layout {
+    body { overflow-y: auto; height: auto; }
+    .workspace-grid, .workspace-grid.mode-pro-active { 
+        grid-template-columns: 1fr; 
         height: auto;
-        min-height: 100vh;
-        overflow-y: auto;
     }
-
-    /* Ломаем сетку: теперь плеер и таблица стоят друг под другом */
-    .workspace-grid {
-        grid-template-columns: 1fr;
-        height: auto;
-        display: flex;
-        flex-direction: column;
-    }
-
-    /* Шапка перестраивается в колонку */
-    .top-bar {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        align-items: flex-start;
-    }
-
-    /* Полоса трассы занимает всю ширину на мобилке */
-    .track-progress-container {
-        width: 100%;
-        padding: 0 10px;
-        margin: 5px 0;
-    }
-
-    .session-status {
-        align-self: flex-start;
-    }
-
-    /* Плеер не должен сплющиваться до 0 пикселей */
-    .video-placeholder {
-        min-height: 250px;
-    }
-
-    /* Стартовый экран: карточки выбора режима друг под другом */
-    .modes-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .welcome-title {
-        font-size: 3rem;
-    }
-
-    /* ТАБЛИЦА: чтобы данные не сжимались в кашу, делаем горизонтальный скролл */
-    .table-responsive {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 10px;
-    }
-    
-    .f1-table {
-        min-width: 500px; /* Минимальная ширина таблицы, чтобы колонки оставались красивыми */
-    }
-    
-    /* Кнопки выбора комментатора: разрешаем перенос на новую строку */
-    .selector-buttons {
-        flex-wrap: wrap;
-    }
+    .top-bar { height: auto; flex-direction: column; padding: 15px; gap: 15px; }
+    .track-timeline { max-width: 100%; width: 100%; margin: 0; }
+    .team-fullname { display: none; }
+    .stream-control-panel { flex-direction: column; align-items: flex-start; }
 }
