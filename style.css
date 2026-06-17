@@ -1,0 +1,513 @@
+/* ==========================================================================
+   RESET & КОРНЕВЫЕ ПЕРЕМЕННЫЕ (F1 TV PALETTE)
+   ========================================================================== */
+:root {
+    --bg-main: #050505;          /* Почти чёрный идеальный гоночный фон */
+    --bg-card: #0D0D0D;          /* Контрастный фон карточек */
+    --accent-red: #FF1801;       /* Официальный агрессивный красный F1 */
+    --text-main: #FFFFFF;        /* Основной белый текст */
+    --text-muted: #8C8C8C;       /* Вторичный серый текст */
+    --border-color: #1A1A1A;     /* Минималистичные тонкие бордеры */
+    
+    /* Цвета команд для тайминга */
+    --rbr-blue: #0600EF;
+    --ferrari-red: #E60000;
+    --merc-cyan: #00D2BE;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Стилизация цифр и таймингов */
+.digits {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+}
+
+/* Утилиты цвета */
+.text-red { color: var(--accent-red); }
+.text-purple { color: #B624FF; }
+.text-green { color: #00E676; }
+
+/* ==========================================================================
+   ЭКРАН ВЫБОРА РЕЖИМА (WELCOME SCREEN)
+   ========================================================================== */
+.welcome-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle at center, #110302 0%, var(--bg-main) 70%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.welcome-overlay.fade-out {
+    opacity: 0;
+    transform: scale(1.02);
+    pointer-events: none;
+}
+
+.welcome-container {
+    text-align: center;
+    max-width: 900px;
+    padding: 20px;
+}
+
+.brand-badge {
+    display: inline-block;
+    background: rgba(255, 24, 1, 0.1);
+    border: 1px solid var(--accent-red);
+    color: var(--accent-red);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 4px 12px;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+}
+
+.welcome-title {
+    font-family: 'Saira Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 4rem;
+    letter-spacing: -1px;
+    line-height: 0.9;
+    margin-bottom: 10px;
+}
+
+.welcome-subtitle {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    margin-bottom: 50px;
+}
+
+.modes-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.mode-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    padding: 40px 30px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+
+.mode-card:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+}
+
+.pro-card:hover {
+    border-color: var(--accent-red);
+}
+
+.mode-icon {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+.mode-name {
+    font-family: 'Saira Condensed', sans-serif;
+    font-size: 1.8rem;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+}
+
+.mode-desc {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 35px;
+    min-height: 70px;
+}
+
+.btn-action {
+    width: 100%;
+    background: #FFFFFF;
+    color: #000000;
+    border: none;
+    padding: 12px;
+    font-family: 'Saira Condensed', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.mode-card:hover .btn-action {
+    background: var(--accent-red);
+    color: #FFFFFF;
+}
+
+.btn-pro {
+    background: transparent;
+    color: #FFFFFF;
+    border: 1px solid var(--border-color);
+}
+
+.mode-card:hover .btn-pro {
+    background: var(--accent-red);
+    border-color: var(--accent-red);
+}
+
+/* ==========================================================================
+   ГЛАВНЫЙ ИНТЕРФЕЙС (DASHBOARD LAYOUT)
+   ========================================================================== */
+.dashboard-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 15px;
+}
+
+.hidden { display: none !important; }
+
+/* ШАПКА */
+.top-bar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.logo-zone {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.logo-main {
+    font-family: 'Saira Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: 0.5px;
+}
+
+.logo-sub {
+    font-family: 'Saira Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--accent-red);
+}
+
+.mode-status-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    margin-left: 15px;
+    border-radius: 2px;
+    font-weight: 700;
+}
+
+.badge-spec { background: #1A1A1A; color: #FFFFFF; }
+.badge-pro { background: var(--accent-red); color: #FFFFFF; }
+
+/* Интерактивный прогрессбар трассы */
+.track-progress-container {
+    padding: 0 40px;
+}
+
+.track-line {
+    height: 4px;
+    background: #1A1A1A;
+    position: relative;
+    border-radius: 2px;
+}
+
+.leader-dot {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: var(--accent-red);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--accent-red);
+}
+
+.dot-label {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+}
+
+.session-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.status-indicator.live {
+    background: var(--accent-red);
+    animation: pulse 1.5s infinite;
+}
+
+.status-text {
+    font-family: 'Saira Condensed', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+}
+
+/* РАБОЧАЯ СЕТКА */
+.workspace-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 15px;
+    flex-grow: 1;
+    height: calc(100vh - 80px);
+}
+
+.left-column, .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    height: 100%;
+}
+
+/* КАРТОЧКИ ОБЩИЕ */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.card-header {
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h3 {
+    font-family: 'Saira Condensed', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+}
+
+/* ВИДЕОПЛЕЕР */
+.video-card { flex-grow: 1; }
+
+.video-placeholder {
+    background: #010101;
+    width: 100%;
+    height: 100%;
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.play-overlay {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+/* БЛОК НАСТРОЕК */
+.controls-wrapper {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.control-group label {
+    display: block;
+    font-family: 'Saira Condensed', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+.selector-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.select-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 8px 16px;
+    font-family: 'Saira Condensed', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.select-btn.active, .select-btn:hover {
+    background: var(--accent-red);
+    border-color: var(--accent-red);
+    color: #FFFFFF;
+}
+
+.label-with-value {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.f1-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: #1A1A1A;
+    outline: none;
+}
+
+.f1-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: var(--accent-red);
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+/* ТАБЛИЦА ТАЙМИНГА */
+.timing-card { flex-grow: 2; }
+
+.f1-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.f1-table th {
+    font-family: 'Saira Condensed', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.f1-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #111111;
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+.driver-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.team-dot {
+    width: 3px;
+    height: 14px;
+    display: inline-block;
+}
+
+/* Индивидуальные полоски команд */
+.team-rbr .team-dot { background: var(--rbr-blue); }
+.team-ferrari .team-dot { background: var(--ferrari-red); }
+.team-mercedes .team-dot { background: var(--merc-cyan); }
+
+/* Планшетки шин */
+.tyre-badge {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 11px;
+}
+.tyre-m { border: 2px solid #FFD400; color: #FFD400; }
+.tyre-s { border: 2px solid #DA0000; color: #DA0000; }
+.tyre-badge small { font-size: 8px; margin-left: 1px; color: #FFF; }
+
+/* НОВОСТИ REDRACE */
+.news-card { flex-grow: 1; max-height: 250px; }
+
+.news-feed {
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.news-item {
+    display: flex;
+    gap: 15px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.news-time {
+    color: var(--accent-red);
+    flex-shrink: 0;
+}
+
+.news-text { color: #E0E0E0; }
+
+/* ==========================================================================
+   УПРАВЛЕНИЕ РЕЖИМАМИ (PRO ОПЦИИ)
+   ========================================================================== */
+/* По умолчанию про-элементы скрыты в режиме Spectator */
+.pro-feature, #delay-control-group {
+    display: none;
+}
+
+/* Когда активен про-режим, включаем отображение колонок */
+.mode-pro-active .pro-feature {
+    display: table-cell;
+}
+.mode-pro-active th.pro-feature {
+    display: table-cell;
+}
+.mode-pro-active #delay-control-group {
+    display: block;
+}
+
+/* АНИМАЦИИ */
+@keyframes pulse {
+    0% { opacity: 0.4; }
+    50% { opacity: 1; }
+    100% { opacity: 0.4; }
+}
