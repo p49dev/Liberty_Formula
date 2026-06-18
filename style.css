@@ -12,12 +12,12 @@
     --bg-base: #050507;
     --bg-card: #0c0c10;
     --bg-panel: #0e0e12;
-    --border-line: rgba(255, 255, 255, 0.05);
-    
+    --border-line: rgba(255, 255, 255, 0.06);
+
     --text-main: #ffffff;
     --text-body: #9da0b0;
     --text-muted: #4e5060;
-    
+
     --f1-red: #e10600;
     --f1-yellow: #ffd400;
     --f1-green: #00d166;
@@ -48,6 +48,13 @@ body {
 .digits {
     font-family: 'JetBrains Mono', monospace;
     font-weight: 500;
+}
+
+/* Жирные бродкаст-цифры — для всего что зритель должен прочитать за 0.3 сек */
+.broadcast-num {
+    font-family: 'Archivo Black', sans-serif;
+    font-weight: 400;
+    letter-spacing: -0.5px;
 }
 
 /* ==========================================================================
@@ -83,8 +90,23 @@ body {
     font-family: 'Titillium Web', sans-serif;
     font-weight: 900;
     font-size: 10px;
-    padding: 2px 6px;
+    padding: 3px 7px;
     border-radius: 2px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.live-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #fff;
+    animation: livedot 1.4s ease-in-out infinite;
+}
+@keyframes livedot {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.25; }
 }
 
 .controls-hub {
@@ -112,6 +134,7 @@ body {
     text-transform: uppercase;
     padding: 5px 12px;
     cursor: pointer;
+    transition: background 0.15s, color 0.15s;
 }
 
 .mode-btn.active {
@@ -128,7 +151,11 @@ body {
     padding: 5px 10px;
     border-radius: 4px;
     border: 1px solid var(--border-line);
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
+.flag-dot { font-size: 12px; }
 
 /* ==========================================================================
    РАБОЧАЯ СЕТКА
@@ -147,8 +174,11 @@ body {
 
 .pro-only { display: none !important; }
 .mode-pro-active .pro-only { display: block !important; }
-.mode-pro-active th.pro-only, 
+.mode-pro-active th.pro-only,
 .mode-pro-active td.pro-only { display: table-cell !important; }
+
+.spectator-only { display: block; }
+.mode-pro-active .spectator-only { display: none !important; }
 
 /* ==========================================================================
    ВИДЕО И СИНХРОНИЗАЦИЯ
@@ -177,6 +207,33 @@ body {
     font-size: 11px;
     color: var(--text-muted);
     letter-spacing: 1px;
+}
+
+/* HUD-оверлей в углу видео, как онборд-графика на трансляции */
+.video-hud-corner {
+    position: absolute;
+    bottom: 14px;
+    left: 14px;
+    background: rgba(5,5,7,0.82);
+    backdrop-filter: blur(4px);
+    border-left: 3px solid var(--f1-red);
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.hud-pos {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 18px;
+    color: var(--f1-yellow);
+    line-height: 1;
+}
+.hud-driver {
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: #fff;
 }
 
 .stream-control-panel {
@@ -215,6 +272,7 @@ body {
     padding: 7px;
     text-align: center;
     white-space: nowrap;
+    cursor: pointer;
 }
 
 .audio-btn.active {
@@ -256,6 +314,14 @@ body {
     letter-spacing: 0.5px;
 }
 
+.pulse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--f1-green);
+    animation: livedot 1.4s ease-in-out infinite;
+}
+
 .terminal-rows {
     padding: 8px;
     max-height: 140px;
@@ -279,6 +345,57 @@ body {
 .fia-row.track-limits { border-left-color: #fff; color: #fff; }
 .fia-row.investigation { border-left-color: var(--f1-yellow); color: var(--f1-yellow); }
 .fia-row.penalty { border-left-color: var(--f1-red); color: #ffb3b3; }
+
+/* ==========================================================================
+   PODIUM STRIP — крупные карточки топ-3 (Spectator mode)
+   ========================================================================== */
+.podium-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border-line);
+    border-bottom: 1px solid var(--border-line);
+}
+
+.podium-cell {
+    background: var(--bg-card);
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+}
+
+.podium-cell.p1 { background: linear-gradient(180deg, rgba(255,212,0,0.06), var(--bg-card) 60%); }
+
+.podium-pos {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 32px;
+    line-height: 1;
+    color: var(--text-muted);
+}
+.podium-cell.p1 .podium-pos { color: var(--f1-yellow); }
+.podium-cell.p2 .podium-pos { color: #c8c8c8; }
+.podium-cell.p3 .podium-pos { color: #c98a4b; }
+
+.podium-cell .team-stripe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 3px;
+}
+
+.podium-driver {
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: 900;
+    font-size: 18px;
+    letter-spacing: 0.5px;
+}
+
+.podium-gap {
+    font-size: 12px;
+    color: var(--text-body);
+}
 
 /* ==========================================================================
    ТАБЛИЦА ЛИДЕРБОРДА
@@ -315,9 +432,9 @@ body {
 }
 
 .pitwall-table td {
-    padding: 10px 12px;
+    padding: 11px 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.02);
-    height: 38px;
+    height: 40px;
     vertical-align: middle;
 }
 
@@ -327,13 +444,19 @@ body {
 .text-purple { color: var(--f1-purple); }
 .text-green { color: var(--f1-green); }
 
-.pitwall-table .pos { font-weight: 700; color: var(--text-body); width: 25px; }
-.pitwall-table .driver { display: flex; align-items: center; gap: 6px; }
-.pitwall-table .driver b { font-family: 'Titillium Web', sans-serif; font-weight: 900; font-size: 13px; }
+/* Позиция теперь жирнее и крупнее — главный broadcast-акцент таблицы */
+.pitwall-table .pos {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 16px;
+    color: var(--text-body);
+    width: 28px;
+}
+.pitwall-table .driver { display: flex; align-items: center; gap: 7px; }
+.pitwall-table .driver b { font-family: 'Titillium Web', sans-serif; font-weight: 900; font-size: 14px; letter-spacing: 0.3px; }
 
 .team-stripe {
     width: 3px;
-    height: 14px;
+    height: 16px;
     display: inline-block;
     border-radius: 1px;
 }
@@ -342,8 +465,8 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 18px;
+    width: 19px;
+    height: 19px;
     border-radius: 50%;
     font-family: 'Titillium Web', sans-serif;
     font-weight: 900;
@@ -441,7 +564,7 @@ body {
     .stream-control-panel { flex-direction: row; justify-content: space-between; }
     .audio-section { width: 60%; }
     .sync-section { width: 35%; }
-    
+
     .right-column {
         height: 100%;
         border-left: 1px solid var(--border-line);
@@ -449,9 +572,13 @@ body {
     .leaderboard-card {
         flex: 1;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
     .table-scroller {
-        height: calc(100% - 40px);
+        flex: 1;
         overflow-y: auto;
     }
-}
+    .podium-pos { font-size: 40px; }
+    .podium-driver { font-size: 20px; }
+   }
