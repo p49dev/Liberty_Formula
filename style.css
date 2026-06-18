@@ -32,491 +32,400 @@
     --clr-alpine: #0090ff;
     --clr-williams: #005aff;
     --clr-haas: #ffffff;
-    --clr-vcarb: #6692ff;
-    --clr-audi: #ff0044;
-    --clr-cadillac: #c0c0c0;
+    --clr-sauber: #52e252;
+    --clr-rb: #6692ff;
 }
 
 body {
     background-color: var(--bg-base);
     color: var(--text-main);
     font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    line-height: 1.3;
+    overflow-x: hidden;
 }
 
 .digits {
     font-family: 'JetBrains Mono', monospace;
-    font-weight: 500;
-}
-
-/* Жирные бродкаст-цифры — для всего что зритель должен прочитать за 0.3 сек */
-.broadcast-num {
-    font-family: 'Archivo Black', sans-serif;
-    font-weight: 400;
-    letter-spacing: -0.5px;
+    font-weight: 700;
 }
 
 /* ==========================================================================
-   ВЕРХНЯЯ ИНЖЕНЕРНАЯ ПАНЕЛЬ (TOP BAR)
+   ШАПКА САЙТА (TOP BAR)
    ========================================================================== */
 .top-bar {
-    background: #09090c;
+    background-color: var(--bg-panel);
     border-bottom: 1px solid var(--border-line);
-    padding: 10px 15px;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
     gap: 10px;
 }
 
 .brand-section {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    width: 100%;
+    gap: 12px;
 }
-
-.logo-text {
-    font-family: 'Titillium Web', sans-serif;
-    font-weight: 900;
-    font-size: 16px;
-    letter-spacing: -0.5px;
-}
-.logo-text span { color: var(--text-muted); font-weight: 400; }
 
 .live-indicator {
-    background: var(--f1-red);
-    color: #fff;
     font-family: 'Titillium Web', sans-serif;
     font-weight: 900;
-    font-size: 10px;
-    padding: 3px 7px;
-    border-radius: 2px;
-    display: inline-flex;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    color: var(--f1-red);
+    border: 1px solid rgba(225, 6, 0, 0.2);
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
+    background: rgba(225, 6, 0, 0.05);
 }
 
 .live-dot {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
+    background-color: var(--f1-red);
     border-radius: 50%;
-    background: #fff;
-    animation: livedot 1.4s ease-in-out infinite;
+    display: inline-block;
+    box-shadow: 0 0 6px var(--f1-red);
 }
-@keyframes livedot {
-    0%, 100% { opacity: 1; }
-    50%      { opacity: 0.25; }
+
+.logo-text {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 16px;
+    letter-spacing: -0.5px;
+}
+
+.logo-text span {
+    color: var(--f1-red);
 }
 
 .controls-hub {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 15px;
+    justify-content: space-between;
     width: 100%;
 }
 
 .mode-selector {
     display: flex;
-    background: #16161f;
+    background: #141419;
     padding: 2px;
     border-radius: 4px;
     border: 1px solid var(--border-line);
 }
 
 .mode-btn {
-    background: transparent;
+    background: none;
     border: none;
     color: var(--text-body);
-    font-family: 'Titillium Web', sans-serif;
-    font-weight: 700;
     font-size: 11px;
-    text-transform: uppercase;
+    font-weight: 600;
     padding: 5px 12px;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    border-radius: 3px;
+    transition: all 0.15s ease;
 }
 
 .mode-btn.active {
-    background: var(--f1-red);
-    color: #fff;
-    border-radius: 3px;
+    background: var(--bg-panel);
+    color: var(--text-main);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .session-badge {
     font-family: 'Titillium Web', sans-serif;
     font-weight: 700;
-    font-size: 11px;
-    background: rgba(255,255,255,0.03);
-    padding: 5px 10px;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    background: #141419;
+    padding: 4px 10px;
     border-radius: 4px;
     border: 1px solid var(--border-line);
     display: flex;
     align-items: center;
     gap: 6px;
 }
-.flag-dot { font-size: 12px; }
 
 /* ==========================================================================
-   РАБОЧАЯ СЕТКА
+   РАБОЧЕЕ ПРОСТРАНСТВО (РАСКЛАДКА ГРИДОВ)
    ========================================================================== */
 .workspace-grid {
     display: flex;
     flex-direction: column;
-    width: 100%;
 }
 
-.left-column, .right-column {
-    width: 100%;
+.left-column {
+    padding: 15px;
     display: flex;
     flex-direction: column;
+    gap: 15px;
 }
 
-.pro-only { display: none !important; }
-.mode-pro-active .pro-only { display: block !important; }
-.mode-pro-active th.pro-only,
-.mode-pro-active td.pro-only { display: table-cell !important; }
-
-.spectator-only { display: block; }
-.mode-pro-active .spectator-only { display: none !important; }
-
 /* ==========================================================================
-   ВИДЕО И СИНХРОНИЗАЦИЯ
+   ВИДЕОПЛЕЕР С ЭФФЕКТАМИ
    ========================================================================== */
-.video-container {
-    background: #000;
-    border-bottom: 1px solid var(--border-line);
+.video-panel {
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-line);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
 .video-ratio-box {
-    width: 100%;
-    padding-top: 56.25%;
     position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 Aspect Ratio */
+    background: #000;
 }
 
 .video-stream-placeholder {
     position: absolute;
-    top: 0; left: 0; bottom: 0; right: 0;
-    background: #09090d;
+    inset: 0;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     justify-content: center;
-}
-
-.stream-info p {
-    font-size: 11px;
+    align-items: center;
+    gap: 15px;
     color: var(--text-muted);
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
     letter-spacing: 1px;
 }
 
-/* HUD-оверлей в углу видео, как онборд-графика на трансляции */
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(255,255,255,0.05);
+    border-top-color: var(--f1-red);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 .video-hud-corner {
     position: absolute;
-    bottom: 14px;
-    left: 14px;
-    background: rgba(5,5,7,0.82);
-    backdrop-filter: blur(4px);
-    border-left: 3px solid var(--f1-red);
-    padding: 6px 12px;
+    bottom: 15px;
+    left: 15px;
+    background: rgba(12, 12, 16, 0.75);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.05);
+    padding: 4px 10px;
+    border-radius: 3px;
     display: flex;
     align-items: center;
     gap: 8px;
+    font-family: 'Titillium Web', sans-serif;
+    pointer-events: none;
 }
+
 .hud-pos {
-    font-family: 'Archivo Black', sans-serif;
-    font-size: 18px;
-    color: var(--f1-yellow);
-    line-height: 1;
-}
-.hud-driver {
-    font-family: 'Titillium Web', sans-serif;
-    font-weight: 700;
-    font-size: 11px;
-    letter-spacing: 1px;
-    color: #fff;
-}
-
-.stream-control-panel {
-    background: #09090c;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.panel-label {
-    font-family: 'Titillium Web', sans-serif;
-    font-weight: 700;
-    font-size: 10px;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-    display: block;
-}
-
-.audio-buttons, .sync-controls {
-    display: flex;
-    width: 100%;
-    background: #14141a;
-    padding: 2px;
-    border-radius: 4px;
-    border: 1px solid var(--border-line);
-}
-
-.audio-btn, .sync-step {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: var(--text-body);
-    font-size: 10px;
-    font-weight: 600;
-    padding: 7px;
-    text-align: center;
-    white-space: nowrap;
-    cursor: pointer;
-}
-
-.audio-btn.active {
     background: var(--f1-red);
-    color: #fff;
+    font-weight: 900;
+    font-size: 11px;
+    padding: 1px 4px;
     border-radius: 2px;
 }
 
-.sync-value {
-    flex: 1;
-    text-align: center;
-    padding: 7px;
-    color: var(--f1-yellow);
-    font-size: 11px;
-}
-
-/* ==========================================================================
-   FIA ТЕРМИНАЛ
-   ========================================================================== */
-.fia-terminal {
-    background: #07070a;
-    border-bottom: 1px solid var(--border-line);
-}
-
-.panel-header {
-    background: var(--bg-panel);
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border-line);
-}
-
-.panel-header h2 {
-    font-family: 'Titillium Web', sans-serif;
+.hud-driver {
     font-weight: 700;
-    font-size: 11px;
-    color: var(--text-body);
+    font-size: 12px;
     letter-spacing: 0.5px;
 }
 
-.pulse-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--f1-green);
-    animation: livedot 1.4s ease-in-out infinite;
-}
-
-.terminal-rows {
-    padding: 8px;
-    max-height: 140px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.fia-row {
-    background: #111115;
-    padding: 6px 10px;
-    border-left: 3px solid #333;
-    font-size: 11px;
-    display: flex;
-    gap: 10px;
-}
-
-.fia-row .timestamp { color: var(--text-muted); font-size: 10px; }
-.fia-row.system { border-left-color: var(--f1-green); color: var(--f1-green); }
-.fia-row.track-limits { border-left-color: #fff; color: #fff; }
-.fia-row.investigation { border-left-color: var(--f1-yellow); color: var(--f1-yellow); }
-.fia-row.penalty { border-left-color: var(--f1-red); color: #ffb3b3; }
-
 /* ==========================================================================
-   PODIUM STRIP — крупные карточки топ-3 (Spectator mode)
+   ПОДИУМ (СТРИП-ПАНЕЛЬ)
    ========================================================================== */
 .podium-strip {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 1px;
-    background: var(--border-line);
-    border-bottom: 1px solid var(--border-line);
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
 }
 
 .podium-cell {
-    background: var(--bg-card);
-    padding: 16px 14px;
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-line);
+    border-radius: 4px;
+    padding: 10px 15px;
     display: flex;
-    flex-direction: column;
-    gap: 6px;
+    align-items: center;
+    gap: 10px;
     position: relative;
+    overflow: hidden;
 }
 
-.podium-cell.p1 { background: linear-gradient(180deg, rgba(255,212,0,0.06), var(--bg-card) 60%); }
+.team-stripe {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+}
+
+/* Цвета командных плашек */
+.clr-redbull .team-stripe { background-color: var(--clr-redbull); }
+.clr-ferrari .team-stripe { background-color: var(--clr-ferrari); }
+.clr-mclaren .team-stripe { background-color: var(--clr-mclaren); }
 
 .podium-pos {
-    font-family: 'Archivo Black', sans-serif;
-    font-size: 32px;
-    line-height: 1;
+    font-size: 16px;
     color: var(--text-muted);
-}
-.podium-cell.p1 .podium-pos { color: var(--f1-yellow); }
-.podium-cell.p2 .podium-pos { color: #c8c8c8; }
-.podium-cell.p3 .podium-pos { color: #c98a4b; }
-
-.podium-cell .team-stripe {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%;
-    height: 3px;
 }
 
 .podium-driver {
-    font-family: 'Titillium Web', sans-serif;
-    font-weight: 900;
-    font-size: 18px;
+    font-weight: 700;
+    font-size: 13px;
     letter-spacing: 0.5px;
 }
 
 .podium-gap {
-    font-size: 12px;
+    margin-left: auto;
+    font-size: 11px;
     color: var(--text-body);
 }
 
+.purple-text { color: var(--f1-purple); }
+
 /* ==========================================================================
-   ТАБЛИЦА ЛИДЕРБОРДА
+   ТАБЛИЦА СЕССИИ (PIT WALL TABLE)
    ========================================================================== */
-.leaderboard-card {
-    width: 100%;
-}
-
-.track-status.green {
-    font-family: 'Titillium Web', sans-serif;
-    font-weight: 700;
-    font-size: 10px;
-    color: var(--f1-red);
-}
-
 .table-scroller {
-    width: 100%;
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-line);
+    border-radius: 6px;
     overflow-x: auto;
 }
 
 .pitwall-table {
     width: 100%;
     border-collapse: collapse;
+    text-align: left;
+    font-size: 12px;
 }
 
 .pitwall-table th {
-    background: #09090c;
+    background: #111116;
     font-family: 'Titillium Web', sans-serif;
     font-weight: 700;
+    text-transform: uppercase;
     font-size: 10px;
+    letter-spacing: 0.5px;
     color: var(--text-muted);
-    padding: 10px 12px;
+    padding: 10px 15px;
     border-bottom: 1px solid var(--border-line);
 }
 
 .pitwall-table td {
-    padding: 11px 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
-    height: 40px;
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
     vertical-align: middle;
 }
 
-.center { text-align: center; }
-.right { text-align: right; }
-
-.text-purple { color: var(--f1-purple); }
-.text-green { color: var(--f1-green); }
-
-/* Позиция теперь жирнее и крупнее — главный broadcast-акцент таблицы */
-.pitwall-table .pos {
-    font-family: 'Archivo Black', sans-serif;
-    font-size: 16px;
-    color: var(--text-body);
-    width: 28px;
+.pitwall-table tr:last-child td {
+    border-bottom: none;
 }
-.pitwall-table .driver { display: flex; align-items: center; gap: 7px; }
-.pitwall-table .driver b { font-family: 'Titillium Web', sans-serif; font-weight: 900; font-size: 14px; letter-spacing: 0.3px; }
 
-.team-stripe {
+.pitwall-table tr {
+    position: relative;
+}
+
+.pitwall-table .team-stripe {
+    position: absolute;
+    left: 0;
+    top: 4px;
+    bottom: 4px;
     width: 3px;
-    height: 16px;
-    display: inline-block;
-    border-radius: 1px;
+    border-radius: 0 2px 2px 0;
+}
+
+.pitwall-table tr:hover {
+    background: rgba(255,255,255,0.01);
+}
+
+.pitwall-table .pos {
+    color: var(--text-muted);
+    width: 40px;
+}
+
+.pitwall-table .driver {
+    padding-left: 20px;
+    font-size: 13px;
+    color: var(--text-main);
+}
+
+.pitwall-table .gap {
+    color: var(--text-body);
 }
 
 .tyre-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 19px;
-    height: 19px;
+    display: inline-block;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
-    font-family: 'Titillium Web', sans-serif;
-    font-weight: 900;
+    text-align: center;
+    line-height: 16px;
     font-size: 10px;
-    border: 2px solid transparent;
+    font-weight: 900;
+    font-family: 'Archivo Black', sans-serif;
+    border: 1px solid transparent;
 }
-.tyre-badge small { font-size: 7px; margin-left: 0.5px; }
+
 .tyre-badge.m { border-color: var(--f1-yellow); color: var(--f1-yellow); }
 .tyre-badge.s { border-color: var(--f1-red); color: var(--f1-red); }
 .tyre-badge.h { border-color: #fff; color: #fff; }
 
-/* ПРИВЯЗКА КЛАССОВ ВСЕХ 11 КОМАНД 2026 */
-.team-redbull .team-stripe { background: var(--clr-redbull); }
-.team-ferrari .team-stripe { background: var(--clr-ferrari); }
-.team-mercedes .team-stripe { background: var(--clr-mercedes); }
-.team-mclaren .team-stripe { background: var(--clr-mclaren); }
-.team-aston .team-stripe { background: var(--clr-aston); }
-.team-alpine .team-stripe { background: var(--clr-alpine); }
-.team-williams .team-stripe { background: var(--clr-williams); }
-.team-haas .team-stripe { background: var(--clr-haas); }
-.team-vcarb .team-stripe { background: var(--clr-vcarb); }
-.team-audi .team-stripe { background: var(--clr-audi); }
-.team-cadillac .team-stripe { background: var(--clr-cadillac); }
+.center { text-align: center; }
+.right { text-align: right; }
 
 /* ==========================================================================
-   REDRACE HUB
+   ХАБ НОВОСТЕЙ (RED RACE FEED)
    ========================================================================== */
-.redrace-hub-panel {
-    background: #060609;
+.hub-panel {
+    background-color: var(--bg-panel);
     border-top: 1px solid var(--border-line);
-    margin-top: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
 }
 
-.hub-content {
-    padding: 10px;
+.hub-panel h2 {
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: 900;
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: var(--text-main);
+}
+
+.hub-timeline {
+    margin-top: 15px;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-height: 200px;
     overflow-y: auto;
 }
 
 .hub-row {
-    background: #0c0c11;
-    padding: 8px 12px;
-    border-radius: 3px;
+    background: #111116;
+    border: 1px solid var(--border-line);
+    border-radius: 4px;
+    padding: 10px 15px;
     display: flex;
+    gap: 15px;
     align-items: flex-start;
-    gap: 12px;
-    border: 1px solid rgba(255,255,255,0.01);
+    transition: transform 0.2s ease;
+}
+
+.hub-row:hover {
+    border-color: rgba(255,255,255,0.12);
 }
 
 .hub-row.alert {
@@ -544,7 +453,7 @@ body {
 }
 
 /* ==========================================================================
-   АДАПТАЦИЯ ДЕСКТОП
+   АДАПТАЦИЯ ДЕСКТОП ( СЕТКА GRID )
    ========================================================================== */
 @media (min-width: 993px) {
     .workspace-grid {
@@ -561,24 +470,235 @@ body {
         padding: 0 20px;
     }
     .brand-section, .controls-hub { width: auto; }
-    .stream-control-panel { flex-direction: row; justify-content: space-between; }
-    .audio-section { width: 60%; }
-    .sync-section { width: 35%; }
-
-    .right-column {
-        height: 100%;
+    .controls-hub { gap: 25px; }
+    .hub-panel {
+        border-top: none;
         border-left: 1px solid var(--border-line);
+        height: 100%;
     }
-    .leaderboard-card {
+    .hub-timeline {
         flex: 1;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
     }
-    .table-scroller {
-        flex: 1;
+    .left-column {
+        height: 100%;
         overflow-y: auto;
     }
-    .podium-pos { font-size: 40px; }
-    .podium-driver { font-size: 20px; }
-   }
+    .pro-only { display: none; }
+    .mode-pro-active .pro-only { display: table-cell; }
+    .mode-pro-active .spectator-only { display: none; }
+}
+
+@media (max-width: 992px) {
+    .pro-only { display: none; }
+}
+
+
+/* ==========================================================================
+   ДОБАВЛЕННЫЕ ПЛАГИНЫ (НОВЫЕ ФИЧИ, БЕЗ СЛОМА СТАРОЙ ВЕРСТКИ)
+   ========================================================================== */
+
+/* Кнопка Бургера в шапке */
+.menu-toggle-btn {
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 18px;
+    height: 13px;
+    cursor: pointer;
+    padding: 0;
+}
+.menu-toggle-btn span {
+    width: 100%;
+    height: 2px;
+    background-color: var(--text-main);
+    transition: 0.2s ease;
+}
+.menu-toggle-btn:hover span {
+    background-color: var(--f1-red);
+}
+
+/* Слайд-панель Sidebar */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 280px;
+    height: 100vh;
+    background: #08080b;
+    border-right: 1px solid var(--border-line);
+    z-index: 9999;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    transition: left 0.3s cubic-bezier(0.77, 0, 0.175, 1);
+}
+.sidebar.open {
+    left: 0;
+}
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--border-line);
+    padding-bottom: 15px;
+}
+.sidebar-header h3 {
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: 900;
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: var(--f1-red);
+}
+.close-menu-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 22px;
+    cursor: pointer;
+    line-height: 1;
+}
+.close-menu-btn:hover { color: var(--text-main); }
+
+.sidebar-section {
+    margin-bottom: 30px;
+}
+.sidebar-section h4 {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    font-family: 'Titillium Web', sans-serif;
+}
+.sidebar-link {
+    display: block;
+    color: var(--text-body);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 8px 10px;
+    border-radius: 4px;
+    transition: 0.2s;
+    margin-bottom: 4px;
+}
+.sidebar-link:hover, .sidebar-link.active {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-main);
+}
+.badge-coming {
+    background: var(--f1-purple);
+    color: #fff;
+    font-size: 8px;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 2px;
+    margin-left: 5px;
+}
+.sidebar-footer {
+    margin-top: auto;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-muted);
+}
+
+/* Пульт управления RTBF под плеером */
+.rtbf-control-bar {
+    background: var(--bg-panel);
+    border-top: 1px solid var(--border-line);
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+}
+.rtbf-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Разноцветные неоновые индикаторы прокси-сервера Streamlink */
+.status-pulse-green, .status-pulse-yellow, .status-pulse-red {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    animation: statusPulse 2s infinite ease-in-out;
+}
+.status-pulse-green { background-color: var(--f1-green); box-shadow: 0 0 8px var(--f1-green); }
+.status-pulse-yellow { background-color: var(--f1-yellow); box-shadow: 0 0 8px var(--f1-yellow); }
+.status-pulse-red { background-color: var(--f1-red); box-shadow: 0 0 8px var(--f1-red); }
+
+@keyframes statusPulse {
+    0% { opacity: 0.3; }
+    50% { opacity: 1; }
+    100% { opacity: 0.3; }
+}
+.rtbf-label { color: var(--text-body); }
+.rtbf-label b { color: var(--text-main); }
+
+.rtbf-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.audio-sync-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-body);
+}
+.audio-sync-box input[type="range"] {
+    width: 70px;
+    accent-color: var(--f1-red);
+    cursor: pointer;
+}
+#delay-val {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--f1-yellow);
+    width: 35px;
+}
+.rtbf-select {
+    background: #141419;
+    border: 1px solid var(--border-line);
+    color: var(--text-main);
+    padding: 3px 6px;
+    font-size: 11px;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+
+/* Фильтры новостей в RSS ленте */
+.hub-header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-bottom: 1px solid var(--border-line);
+    padding-bottom: 15px;
+}
+.hub-filters {
+    display: flex;
+    gap: 6px;
+}
+.filter-tag {
+    background: #141419;
+    border: 1px solid var(--border-line);
+    color: var(--text-body);
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: 0.15s ease;
+}
+.filter-tag:hover, .filter-tag.active {
+    background: var(--f1-red);
+    border-color: var(--f1-red);
+    color: #fff;
+}
+.rss-source-link {
+    text-decoration: none;
+    margin-right: 2px;
+    opacity: 0.4;
+}
+.rss-source-link:hover { opacity: 1; }
