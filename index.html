@@ -5,12 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liberty Formula // Pit Wall Control</title>
     <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&family=Archivo+Black&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3.0">
+    <link rel="stylesheet" href="style.css?v=4.0">
 </head>
 <body>
 
+    <div class="sidebar" id="main-sidebar">
+        <div class="sidebar-header">
+            <h3>PITWALL CONTROL</h3>
+            <button class="close-menu-btn" onclick="toggleMenu()">×</button>
+        </div>
+        <div class="sidebar-section">
+            <h4>КАЛЕНДАРЬ ГРАН-ПРИ 2026</h4>
+            <a href="#" class="sidebar-link active" data-flag="🇧🇭" data-gp="Bahrain GP">🇧🇭 Bahrain GP</a>
+            <a href="#" class="sidebar-link" data-flag="🇪🇸" data-gp="Spanish GP">🇪🇸 Spanish GP <span class="badge-coming">NEXT</span></a>
+            <a href="#" class="sidebar-link" data-flag="🇲🇨" data-gp="Monaco GP">🇲🇨 Monaco GP</a>
+            <a href="#" class="sidebar-link" data-flag="🇮🇹" data-gp="Monza GP">🇮🇹 Monza GP</a>
+        </div>
+        <div class="sidebar-section">
+            <h4>ДИАГНОСТИКА СЕРВЕРА</h4>
+            <a href="https://libertyformula-production-4740.up.railway.app/api/feed.json" target="_blank" class="sidebar-link">🔌 Проверить Railway Feed</a>
+            <a href="https://libertyformula-production-4740.up.railway.app/api/stream.json" target="_blank" class="sidebar-link">📺 Проверить Stream API</a>
+        </div>
+        <div class="sidebar-footer">
+            <span>Core v4.0 // P4/9 & RedRace Engine</span>
+        </div>
+    </div>
+
     <header class="top-bar">
         <div class="brand-section">
+            <button class="menu-toggle-btn" onclick="toggleMenu()">
+                <span></span><span></span><span></span>
+            </button>
             <span class="live-indicator"><span class="live-dot"></span>LIVE</span>
             <h1 class="logo-text">LIBERTY <span>FORMULA</span></h1>
         </div>
@@ -27,374 +52,257 @@
     </header>
 
     <main class="workspace-grid" id="workspace">
-
-        <section class="left-column">
-            <div class="video-container">
+        
+        <div class="left-column">
+            
+            <div class="video-panel">
                 <div class="video-ratio-box">
                     <div class="video-stream-placeholder">
-                        <div class="stream-info">
-                            <span class="icon-play">▲</span>
-                            <p class="digits">MAIN FEED // FEED_ID_01_PROD</p>
-                        </div>
+                        <div class="spinner"></div>
+                        <span>ЗАПУСК ПОТОКА STREAMLINK ЧЕРЕЗ RAILWAY PROXY...</span>
                     </div>
                     <div class="video-hud-corner">
                         <span class="hud-pos">P1</span>
                         <span class="hud-driver">VERSTAPPEN</span>
                     </div>
                 </div>
-
-                <div class="stream-control-panel">
-                    <div class="audio-section">
-                        <span class="panel-label">RECEPTACLE CONTROLS // АУДИО:</span>
-                        <div class="audio-buttons">
-                            <button class="audio-btn active">P4/9 LIVE</button>
-                            <button class="audio-btn">RedRace Стрим</button>
-                            <button class="audio-btn">FX (Моторы)</button>
+                
+                <div class="rtbf-control-bar">
+                    <div class="rtbf-status">
+                        <span class="status-pulse-green" id="stream-status-dot"></span>
+                        <span class="rtbf-label">ИСТОЧНИК: <b id="stream-source-text">RTBF AUVIO (BE)</b></span>
+                    </div>
+                    <div class="rtbf-actions">
+                        <div class="audio-sync-box">
+                            <label for="audio-delay">Синхронизация звука:</label>
+                            <input type="range" id="audio-delay" min="-5" max="5" step="0.5" value="0" oninput="updateAudioDelay(this.value)">
+                            <span id="delay-val">0.0s</span>
                         </div>
-                    </div>
-
-                    <div class="sync-section">
-                        <span class="panel-label">DELAY CONTROL (СИНХРОНИЗАЦИЯ):</span>
-                        <div class="sync-controls">
-                            <button class="sync-step">−0.5s</button>
-                            <span class="sync-value digits">0.0s</span>
-                            <button class="sync-step">+0.5s</button>
-                        </div>
+                        <select class="rtbf-select" id="stream-quality">
+                            <option value="1080p">1080p [60fps]</option>
+                            <option value="720p" selected>720p [Auto]</option>
+                            <option value="480p">480p [Mobile]</option>
+                        </select>
                     </div>
                 </div>
             </div>
 
-            <div class="fia-terminal pro-only">
-                <div class="panel-header">
-                    <h2>FIA RACE CONTROL NOTICES</h2>
-                    <span class="pulse-dot"></span>
+            <div class="podium-strip spectator-only">
+                <div class="podium-cell p1 clr-redbull">
+                    <span class="podium-pos digits">1</span>
+                    <span class="team-stripe"></span>
+                    <span class="podium-driver">VER</span>
+                    <span class="podium-gap digits purple-text">LEADER</span>
                 </div>
-                <div class="terminal-rows">
-                    <div class="fia-row system">
-                        <span class="timestamp digits">18:02:11</span>
-                        <span class="message">TRACK CLEAR // OVERRIDE ENABLED</span>
-                    </div>
-                    <div class="fia-row track-limits">
-                        <span class="timestamp digits">18:05:44</span>
-                        <span class="message">LAP TIME DELETED – CAR 44 (HAM) – TURN 4 TRACK LIMITS</span>
-                    </div>
-                    <div class="fia-row investigation">
-                        <span class="timestamp digits">18:11:20</span>
-                        <span class="message">INCIDENT INVOLVING CAR 4 (NOR) AND CAR 1 (VER) NOTED</span>
-                    </div>
+                <div class="podium-cell p2 clr-ferrari">
+                    <span class="podium-pos digits">2</span>
+                    <span class="team-stripe"></span>
+                    <span class="podium-driver">LEC</span>
+                    <span class="podium-gap digits">+3.420</span>
                 </div>
-            </div>
-        </section>
-
-        <section class="right-column">
-
-            <div class="leaderboard-card">
-                <div class="panel-header">
-                    <h2>LIVE LEADERBOARD</h2>
-                    <span class="track-status green">LAP 14/57</span>
-                </div>
-
-                <div class="podium-strip spectator-only">
-                    <div class="podium-cell p1">
-                        <span class="podium-pos digits">1</span>
-                        <span class="team-stripe"></span>
-                        <span class="podium-driver">VER</span>
-                        <span class="podium-gap digits purple-text">INTERVAL</span>
-                    </div>
-                    <div class="podium-cell p2">
-                        <span class="podium-pos digits">2</span>
-                        <span class="team-stripe"></span>
-                        <span class="podium-driver">LEC</span>
-                        <span class="podium-gap digits">+1.420</span>
-                    </div>
-                    <div class="podium-cell p3">
-                        <span class="podium-pos digits">3</span>
-                        <span class="team-stripe"></span>
-                        <span class="podium-driver">NOR</span>
-                        <span class="podium-gap digits">+3.150</span>
-                    </div>
-                </div>
-
-                <div class="table-scroller">
-                    <table class="pitwall-table">
-                        <thead>
-                            <tr>
-                                <th class="center">POS</th>
-                                <th>DRIVER</th>
-                                <th>GAP</th>
-                                <th class="center">TYRE</th>
-                                <th class="pro-only right">S1</th>
-                                <th class="pro-only right">S2</th>
-                                <th class="pro-only right">S3</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="team-redbull">
-                                <td class="pos digits">1</td>
-                                <td class="driver"><span class="team-stripe"></span><b>VER</b></td>
-                                <td class="gap digits purple-text">INTERVAL</td>
-                                <td class="tyre center"><span class="tyre-badge m">M<small>12</small></span></td>
-                                <td class="pro-only digits right text-purple">28.1</td>
-                                <td class="pro-only digits right text-green">39.4</td>
-                                <td class="pro-only digits right">23.2</td>
-                            </tr>
-                            <tr class="team-ferrari">
-                                <td class="pos digits">2</td>
-                                <td class="driver"><span class="team-stripe"></span><b>LEC</b></td>
-                                <td class="gap digits">+1.420</td>
-                                <td class="tyre center"><span class="tyre-badge m">M<small>12</small></span></td>
-                                <td class="pro-only digits right text-green">28.3</td>
-                                <td class="pro-only digits right">39.6</td>
-                                <td class="pro-only digits right text-purple">23.0</td>
-                            </tr>
-                            <tr class="team-mclaren">
-                                <td class="pos digits">3</td>
-                                <td class="driver"><span class="team-stripe"></span><b>NOR</b></td>
-                                <td class="gap digits">+3.150</td>
-                                <td class="tyre center"><span class="tyre-badge m">M<small>11</small></span></td>
-                                <td class="pro-only digits right">28.4</td>
-                                <td class="pro-only digits right">39.5</td>
-                                <td class="pro-only digits right">23.3</td>
-                            </tr>
-                            <tr class="team-ferrari">
-                                <td class="pos digits">4</td>
-                                <td class="driver"><span class="team-stripe"></span><b>HAM</b></td>
-                                <td class="gap digits">+4.890</td>
-                                <td class="tyre center"><span class="tyre-badge s">S<small>3</small></span></td>
-                                <td class="pro-only digits right">28.5</td>
-                                <td class="pro-only digits right">39.8</td>
-                                <td class="pro-only digits right">23.5</td>
-                            </tr>
-                            <tr class="team-audi">
-                                <td class="pos digits">5</td>
-                                <td class="driver"><span class="team-stripe"></span><b>HUL</b></td>
-                                <td class="gap digits">+12.400</td>
-                                <td class="tyre center"><span class="tyre-badge h">H<small>14</small></span></td>
-                                <td class="pro-only digits right">28.9</td>
-                                <td class="pro-only digits right">40.2</td>
-                                <td class="pro-only digits right">23.8</td>
-                            </tr>
-                            <tr class="team-cadillac">
-                                <td class="pos digits">6</td>
-                                <td class="driver"><span class="team-stripe"></span><b>BOT</b></td>
-                                <td class="gap digits">+15.210</td>
-                                <td class="tyre center"><span class="tyre-badge m">M<small>10</small></span></td>
-                                <td class="pro-only digits right">29.1</td>
-                                <td class="pro-only digits right">40.5</td>
-                                <td class="pro-only digits right">23.9</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="podium-cell p3 clr-mclaren">
+                    <span class="podium-pos digits">3</span>
+                    <span class="team-stripe"></span>
+                    <span class="podium-driver">NOR</span>
+                    <span class="podium-gap digits">+5.112</span>
                 </div>
             </div>
 
-            <div class="redrace-hub-panel">
-                <div class="panel-header">
-                    <h2>REDRACE HUB // ОПЕРАТИВНАЯ СВОДКА</h2>
+            <div class="table-scroller">
+                <table class="pitwall-table">
+                    <thead>
+                        <tr>
+                            <th class="center">POS</th>
+                            <th>DRIVER</th>
+                            <th>GAP</th>
+                            <th class="center">TYRE</th>
+                            <th class="pro-only right">S1</th>
+                            <th class="pro-only right">S2</th>
+                            <th class="pro-only right">S3</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <tr class="clr-redbull">
+                            <td class="pos digits">1</td>
+                            <td class="driver"><span class="team-stripe"></span><b>VER</b></td>
+                            <td class="gap digits">LEADER</td>
+                            <td class="tyre center"><span class="tyre-badge m">M</span></td>
+                            <td class="pro-only digits right">28.114</td>
+                            <td class="pro-only digits right">38.441</td>
+                            <td class="pro-only digits right">22.905</td>
+                        </tr>
+                        <tr class="clr-ferrari">
+                            <td class="pos digits">2</td>
+                            <td class="driver"><span class="team-stripe"></span><b>LEC</b></td>
+                            <td class="gap digits">+3.420</td>
+                            <td class="tyre center"><span class="tyre-badge m">M</span></td>
+                            <td class="pro-only digits right">28.240</td>
+                            <td class="pro-only digits right">38.612</td>
+                            <td class="pro-only digits right">22.990</td>
+                        </tr>
+                        <tr class="clr-mclaren">
+                            <td class="pos digits">3</td>
+                            <td class="driver"><span class="team-stripe"></span><b>NOR</b></td>
+                            <td class="gap digits">+5.112</td>
+                            <td class="tyre center"><span class="tyre-badge s">S</span></td>
+                            <td class="pro-only digits right">28.095</td>
+                            <td class="pro-only digits right">38.901</td>
+                            <td class="pro-only digits right">23.102</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="hub-panel">
+            <div class="hub-header">
+                <h2>REDRACE HUB // RSS FEED</h2>
+                <div class="hub-filters">
+                    <button class="filter-tag active" onclick="filterRSS('all')">Все публикации</button>
+                    <button class="filter-tag" onclick="filterRSS('alert')">Срочно 🚨</button>
+                    <button class="filter-tag" onclick="filterRSS('tech')">Аналитика 📊</button>
                 </div>
-                <div class="hub-content">
-                    <div class="hub-row">
-                        <span class="hub-time digits text-red">18:02</span>
-                        <p class="hub-text"><b>Ферстаппен</b> сообщает о проблемах с зарядкой батареи. MGU-K не выдает полную мощность в режиме Override.</p>
-                    </div>
-                    <div class="hub-row alert">
-                        <span class="hub-time digits text-red">17:55</span>
-                        <p class="hub-text">🚨 <span class="alert-highlight">INCIDENT:</span> Контакт между Антонелли и Колапинто в 1-м повороте. Желтые флаги.</p>
+            </div>
+            <div class="hub-timeline" id="rss-container">
+                <div class="hub-row alert">
+                    <span class="hub-time text-red">LIVE</span>
+                    <div class="hub-body">
+                        <p class="hub-text"><span class="alert-highlight">[СИСТЕМА]</span> Подключение к вашей ноде на Railway FastAPI...</p>
                     </div>
                 </div>
             </div>
+        </div>
 
-        </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.12/dist/hls.min.js"></script>
     <script>
+        // АКТУАЛЬНЫЙ АДРЕС БЭКЕНДА RAILWAY
+        const BACKEND_URL = "https://libertyformula-production-4740.up.railway.app";
+        let currentQuality = "720p";
+        let cachedFeedItems = [];
+
+        // Переключатель режимов экрана
         function setMode(mode) {
-            const workspace = document.getElementById('workspace');
+            const ws = document.getElementById('workspace');
             const btnSpec = document.getElementById('btn-spectator');
             const btnPro = document.getElementById('btn-pro');
-
+            
             if (mode === 'pro') {
-                workspace.classList.add('mode-pro-active');
+                ws.classList.add('mode-pro-active');
                 btnPro.classList.add('active');
                 btnSpec.classList.remove('active');
             } else {
-                workspace.classList.remove('mode-pro-active');
+                ws.classList.remove('mode-pro-active');
                 btnSpec.classList.add('active');
                 btnPro.classList.remove('active');
             }
         }
 
-        // ════════════════════════════════════════════════════
-        // OPENF1 — LIVE TIMING
-        // ════════════════════════════════════════════════════
-        const OPENF1 = 'https://api.openf1.org/v1';
-
-        const TEAM_CLASS = {
-            1:'team-mercedes', 63:'team-mercedes',
-            44:'team-ferrari', 16:'team-ferrari',
-            4:'team-mclaren', 81:'team-mclaren',
-            33:'team-redbull', 22:'team-redbull',
-            30:'team-vcarb', 6:'team-vcarb',
-            27:'team-audi', 5:'team-audi',
-            10:'team-alpine', 43:'team-alpine',
-            87:'team-haas', 31:'team-haas',
-            23:'team-williams', 55:'team-williams',
-            11:'team-cadillac', 77:'team-cadillac',
-            18:'team-aston', 14:'team-aston',
-        };
-        const DRIVER_CODE = {
-            1:'ANT', 63:'RUS', 44:'HAM', 16:'LEC',
-            4:'NOR', 81:'PIA', 33:'VER', 22:'HAD',
-            30:'LAW', 6:'LIN', 27:'HUL', 5:'BOR',
-            10:'GAS', 43:'COL', 87:'BEA', 31:'OCO',
-            23:'ALB', 55:'SAI', 11:'PER', 77:'BOT',
-            18:'STR', 14:'ALO',
-        };
-        const DRIVER_FULL = {
-            1:'ANTONELLI', 63:'RUSSELL', 44:'HAMILTON', 16:'LECLERC',
-            4:'NORRIS', 81:'PIASTRI', 33:'VERSTAPPEN', 22:'HADJAR',
-            30:'LAWSON', 6:'LINDBLAD', 27:'HULKENBERG', 5:'BORTOLETO',
-            10:'GASLY', 43:'COLAPINTO', 87:'BEARMAN', 31:'OCON',
-            23:'ALBON', 55:'SAINZ', 11:'PEREZ', 77:'BOTTAS',
-            18:'STROLL', 14:'ALONSO',
-        };
-
-        async function fetchJSON(url) {
-            try { const r = await fetch(url); return r.ok ? await r.json() : []; }
-            catch { return []; }
+        // Управление боковым меню (Sidebar)
+        function toggleMenu() {
+            document.getElementById('main-sidebar').classList.toggle('open');
         }
 
-        async function getLatestSession() {
-            const data = await fetchJSON(`${OPENF1}/sessions?year=2026`);
-            if (!data.length) return null;
-            return data.sort((a,b) => new Date(b.date_start) - new Date(a.date_start))[0];
-        }
-
-        function gapText(iv) {
-            if (!iv) return '—';
-            const g = iv.gap_to_leader;
-            if (g == null || g === 0) return 'INTERVAL';
-            return typeof g === 'number' ? `+${g.toFixed(3)}` : String(g);
-        }
-
-        async function refreshTiming() {
-            const session = await getLatestSession();
-            if (!session) return;
-
-            const sessionBadge = document.querySelector('.session-badge');
-            if (sessionBadge) {
-                sessionBadge.innerHTML = `<span class="flag-dot">🏁</span> ${(session.meeting_name||'GP').toUpperCase()}`;
-            }
-
-            const [positions, intervals] = await Promise.all([
-                fetchJSON(`${OPENF1}/position?session_key=${session.session_key}`),
-                fetchJSON(`${OPENF1}/intervals?session_key=${session.session_key}`),
-            ]);
-            if (!positions.length) return;
-
-            const latest = {};
-            for (const p of positions) {
-                const d = p.driver_number;
-                if (!latest[d] || p.date > latest[d].date) latest[d] = p;
-            }
-            const ivMap = {};
-            for (const iv of intervals) {
-                const d = iv.driver_number;
-                if (!ivMap[d] || iv.date > ivMap[d].date) ivMap[d] = iv;
-            }
-
-            const sorted = Object.values(latest)
-                .sort((a,b) => (a.position||99) - (b.position||99))
-                .slice(0, 10);
-
-            renderPodium(sorted, ivMap);
-            renderTable(sorted, ivMap);
-            renderHUD(sorted[0]);
-        }
-
-        function renderPodium(sorted, ivMap) {
-            const cells = document.querySelectorAll('.podium-cell');
-            sorted.slice(0,3).forEach((row, i) => {
-                const cell = cells[i];
-                if (!cell) return;
-                const drv = row.driver_number;
-                cell.querySelector('.podium-driver').textContent = DRIVER_CODE[drv] || `#${drv}`;
-                cell.querySelector('.podium-gap').textContent = gapText(ivMap[drv]);
-                cell.className = 'podium-cell p' + (i+1) + ' ' + (TEAM_CLASS[drv] || '');
+        // Клик по трассам в меню: меняет шапку
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.getAttribute('href') === '#') e.preventDefault();
+                document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                
+                const flag = this.getAttribute('data-flag');
+                const gpName = this.getAttribute('data-gp');
+                if(gpName) {
+                    document.querySelector('.session-badge').innerHTML = `<span class="flag-dot">${flag}</span> ${gpName.toUpperCase()}`;
+                    toggleMenu(); // закрываем меню после выбора
+                }
             });
+        });
+
+        // Слайдер аудио-синхронизации (Интерактивный)
+        function updateAudioDelay(val) {
+            document.getElementById('delay-val').textContent = (val > 0 ? '+' : '') + val + 's';
+            console.log(`[СИНХРОНИЗАЦИЯ] Смещение аудиодорожки относительно видео-буфера: ${val} сек.`);
         }
 
-        function renderTable(sorted, ivMap) {
-            const tbody = document.querySelector('.pitwall-table tbody');
-            if (!tbody) return;
-            tbody.innerHTML = sorted.map(row => {
-                const drv = row.driver_number;
-                const teamClass = TEAM_CLASS[drv] || '';
-                const code = DRIVER_CODE[drv] || `#${drv}`;
-                const gap = gapText(ivMap[drv]);
-                return `<tr class="${teamClass}">
-                    <td class="pos digits">${row.position}</td>
-                    <td class="driver"><span class="team-stripe"></span><b>${code}</b></td>
-                    <td class="gap digits">${gap}</td>
-                    <td class="tyre center"><span class="tyre-badge m">—</span></td>
-                    <td class="pro-only digits right">—</td>
-                    <td class="pro-only digits right">—</td>
-                    <td class="pro-only digits right">—</td>
-                </tr>`;
-            }).join('');
+        // Селектор качества (Отправляет запрос на бэк и перезапускает HLS поток)
+        document.getElementById('stream-quality').addEventListener('change', function(e) {
+            currentQuality = e.target.value;
+            console.log(`[STREAMLINK] Переключение профиля качества на: ${currentQuality}`);
+            loadStream();
+        });
+
+        // Фильтрация новостей на фронтенде
+        function filterRSS(category) {
+            document.querySelectorAll('.filter-tag').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderFeed(category);
         }
 
-        function renderHUD(leader) {
-            if (!leader) return;
-            const hud = document.querySelector('.video-hud-corner');
-            if (!hud) return;
-            hud.querySelector('.hud-pos').textContent = 'P' + leader.position;
-            hud.querySelector('.hud-driver').textContent = DRIVER_FULL[leader.driver_number] || '';
-        }
+        // Отрисовка новостей в ленту
+        function renderFeed(filter = 'all') {
+            const container = document.getElementById('rss-container');
+            if (!cachedFeedItems.length) return;
 
-        refreshTiming();
-        setInterval(refreshTiming, 5000);
+            const filtered = cachedFeedItems.filter(item => filter === 'all' || item.category === filter);
+            
+            if(filtered.length === 0) {
+                container.innerHTML = `<div class="hub-row"><span class="hub-time">—</span><div class="hub-body"><p class="hub-text">В данной категории нет активных новостей сессии.</p></div></div>`;
+                return;
+            }
 
-        // ════════════════════════════════════════════════════
-        // RSS NEWS — читает /api/feed.json который готовит бэкенд бота
-        // (Render бот парсит RSS и отдаёт JSON, сайт его просто рисует)
-        // ════════════════════════════════════════════════════
-        const FEED_URL = 'https://liberty-formula-bot.onrender.com/api/feed.json';
-
-        async function refreshHub() {
-            try {
-                const r = await fetch(FEED_URL);
-                if (!r.ok) return; // бэкенд ещё не поднят — тихо пропускаем
-                const items = await r.json();
-                if (!Array.isArray(items) || !items.length) return;
-
-                const hub = document.querySelector('.hub-content');
-                if (!hub) return;
-                hub.innerHTML = items.slice(0, 8).map(item => `
-                    <div class="hub-row ${item.alert ? 'alert' : ''}">
-                        <span class="hub-time digits text-red">${item.time || ''}</span>
-                        <p class="hub-text">${item.alert ? '🚨 <span class="alert-highlight">INCIDENT:</span> ' : ''}${item.text}</p>
+            container.innerHTML = filtered.map(item => `
+                <div class="hub-row ${item.category}">
+                    <span class="hub-time ${item.category === 'alert' ? 'text-red' : ''}">${item.time}</span>
+                    <div class="hub-body">
+                        <p class="hub-text">
+                            <a href="${item.link}" target="_blank" class="rss-source-link" title="Читать источник">🔗</a> 
+                            <b class="${item.category === 'alert' ? 'alert-highlight' : ''}">${item.title}</b> — ${item.description}
+                        </p>
                     </div>
-                `).join('');
-            } catch {
-                // бэкенд недоступен — оставляем то что уже на странице
+                </div>
+            `).join('');
+        }
+
+        // Загрузка реального фида через FastAPI и feedparser
+        async function loadFeed() {
+            try {
+                const r = await fetch(`${BACKEND_URL}/api/feed.json`);
+                const data = await r.json();
+                if (data.items && data.items.length > 0) {
+                    cachedFeedItems = data.items;
+                    // Считываем активный фильтр
+                    const activeFilterBtn = document.querySelector('.filter-tag.active');
+                    const currentFilter = activeFilterBtn.innerText.includes('Срочно') ? 'alert' : activeFilterBtn.innerText.includes('Аналитика') ? 'tech' : 'all';
+                    renderFeed(currentFilter);
+                }
+            } catch (e) {
+                console.error("Сервер Railway не отвечает или RSS-модуль собирается.");
             }
         }
 
-        refreshHub();
-        setInterval(refreshHub, 60000);
-
-        // ════════════════════════════════════════════════════
-        // RTBF STREAM — прямой m3u8 приходит с бэкенда (Streamlink)
-        // Бэкенд отдаёт ссылку, плеер её подставляет в video tag
-        // ════════════════════════════════════════════════════
-        const STREAM_URL = 'https://liberty-formula-bot.onrender.com/api/stream.json';
-
+        // Подгрузка видеопотока через Streamlink-ноду на Railway
         async function loadStream() {
             try {
-                const r = await fetch(STREAM_URL);
-                if (!r.ok) return;
+                const r = await fetch(`${BACKEND_URL}/api/stream.json?quality=${currentQuality}`);
                 const data = await r.json();
+                
+                const statusDot = document.getElementById('stream-status-dot');
+                const sourceText = document.getElementById('stream-source-text');
+
+                // Переключаем статус прокси-соединения
+                if(data.status === 'error') {
+                    statusDot.className = 'status-pulse-red';
+                    sourceText.innerHTML = "РЕЗЕРВНЫЙ ПОТОК (ГЕО-БЛОК RTBF)";
+                } else if(data.status === 'test') {
+                    statusDot.className = 'status-pulse-yellow';
+                    sourceText.innerHTML = "ТЕСТОВЫЙ ФИД [RTBF ОФФЛАЙН]";
+                } else {
+                    statusDot.className = 'status-pulse-green';
+                    sourceText.innerHTML = `RTBF AUVIO [${currentQuality.toUpperCase()}]`;
+                }
+
                 if (!data.m3u8) return;
 
                 const box = document.querySelector('.video-ratio-box');
@@ -412,22 +320,25 @@
                     box.insertBefore(video, box.firstChild);
                 }
 
-                if (data.m3u8.includes('.m3u8') && window.Hls && Hls.isSupported()) {
+                if (window.Hls && Hls.isSupported()) {
+                    if (window.hlsInstance) window.hlsInstance.destroy();
                     const hls = new Hls();
                     hls.loadSource(data.m3u8);
                     hls.attachMedia(video);
-                    hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+                    window.hlsInstance = hls;
+                    hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(()=>{}));
                 } else {
                     video.src = data.m3u8;
-                    video.play().catch(() => {});
                 }
             } catch {
-                // бэкенд/RTBF пока недоступны — плеер остаётся в режиме placeholder
+                console.log("Бэкенд видео-ядра недоступен.");
             }
         }
 
+        // Запуск систем
+        loadFeed();
         loadStream();
+        setInterval(loadFeed, 30000); // автоапдейт новостей раз в 30 секунд
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.12/dist/hls.min.js"></script>
 </body>
-    </html>
+</html>
