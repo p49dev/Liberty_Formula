@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liberty Formula // Pit Wall Control</title>
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2.0">
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&family=Archivo+Black&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=3.0">
 </head>
 <body>
 
     <header class="top-bar">
         <div class="brand-section">
-            <span class="live-indicator">LIVE</span>
+            <span class="live-indicator"><span class="live-dot"></span>LIVE</span>
             <h1 class="logo-text">LIBERTY <span>FORMULA</span></h1>
         </div>
 
@@ -20,12 +20,14 @@
                 <button class="mode-btn active" id="btn-spectator" onclick="setMode('spectator')">Spectator</button>
                 <button class="mode-btn" id="btn-pro" onclick="setMode('pro')">Pro PitWall</button>
             </div>
-            <div class="session-badge">BAHRAIN GP</div>
+            <div class="session-badge">
+                <span class="flag-dot">🇧🇭</span> BAHRAIN GP
+            </div>
         </div>
     </header>
 
     <main class="workspace-grid" id="workspace">
-        
+
         <section class="left-column">
             <div class="video-container">
                 <div class="video-ratio-box">
@@ -35,8 +37,12 @@
                             <p class="digits">MAIN FEED // FEED_ID_01_PROD</p>
                         </div>
                     </div>
+                    <div class="video-hud-corner">
+                        <span class="hud-pos">P1</span>
+                        <span class="hud-driver">VERSTAPPEN</span>
+                    </div>
                 </div>
-                
+
                 <div class="stream-control-panel">
                     <div class="audio-section">
                         <span class="panel-label">RECEPTACLE CONTROLS // АУДИО:</span>
@@ -46,11 +52,11 @@
                             <button class="audio-btn">FX (Моторы)</button>
                         </div>
                     </div>
-                    
+
                     <div class="sync-section">
                         <span class="panel-label">DELAY CONTROL (СИНХРОНИЗАЦИЯ):</span>
                         <div class="sync-controls">
-                            <button class="sync-step">-0.5s</button>
+                            <button class="sync-step">−0.5s</button>
                             <span class="sync-value digits">0.0s</span>
                             <button class="sync-step">+0.5s</button>
                         </div>
@@ -81,13 +87,34 @@
         </section>
 
         <section class="right-column">
-            
+
             <div class="leaderboard-card">
                 <div class="panel-header">
                     <h2>LIVE LEADERBOARD</h2>
                     <span class="track-status green">LAP 14/57</span>
                 </div>
-                
+
+                <div class="podium-strip spectator-only">
+                    <div class="podium-cell p1">
+                        <span class="podium-pos digits">1</span>
+                        <span class="team-stripe"></span>
+                        <span class="podium-driver">VER</span>
+                        <span class="podium-gap digits purple-text">INTERVAL</span>
+                    </div>
+                    <div class="podium-cell p2">
+                        <span class="podium-pos digits">2</span>
+                        <span class="team-stripe"></span>
+                        <span class="podium-driver">LEC</span>
+                        <span class="podium-gap digits">+1.420</span>
+                    </div>
+                    <div class="podium-cell p3">
+                        <span class="podium-pos digits">3</span>
+                        <span class="team-stripe"></span>
+                        <span class="podium-driver">NOR</span>
+                        <span class="podium-gap digits">+3.150</span>
+                    </div>
+                </div>
+
                 <div class="table-scroller">
                     <table class="pitwall-table">
                         <thead>
@@ -185,7 +212,7 @@
             const workspace = document.getElementById('workspace');
             const btnSpec = document.getElementById('btn-spectator');
             const btnPro = document.getElementById('btn-pro');
-            
+
             if (mode === 'pro') {
                 workspace.classList.add('mode-pro-active');
                 btnPro.classList.add('active');
