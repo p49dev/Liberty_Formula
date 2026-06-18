@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liberty Formula // Pit Wall Control</title>
     <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2.0">
 </head>
 <body>
 
@@ -14,33 +14,22 @@
             <span class="live-indicator">LIVE</span>
             <h1 class="logo-text">LIBERTY <span>FORMULA</span></h1>
         </div>
-        
-        <div class="track-timeline">
-            <span class="timeline-time digits">00:42:17</span>
-            <div class="timeline-bar">
-                <div class="timeline-progress" style="width: 32%;"></div>
-                <div class="timeline-car-dot" style="left: 32%;"></div>
-            </div>
-            <span class="timeline-laps digits">LAP 18/57</span>
-        </div>
 
         <div class="controls-hub">
             <div class="mode-selector">
                 <button class="mode-btn active" id="btn-spectator" onclick="setMode('spectator')">Spectator</button>
                 <button class="mode-btn" id="btn-pro" onclick="setMode('pro')">Pro PitWall</button>
             </div>
-            <div class="session-badge">MONACO GP</div>
+            <div class="session-badge">BAHRAIN GP</div>
         </div>
     </header>
 
     <main class="workspace-grid" id="workspace">
         
         <section class="left-column">
-            
             <div class="video-container">
                 <div class="video-ratio-box">
                     <div class="video-stream-placeholder">
-                        <div class="scanner-line"></div>
                         <div class="stream-info">
                             <span class="icon-play">▲</span>
                             <p class="digits">MAIN FEED // FEED_ID_01_PROD</p>
@@ -49,20 +38,20 @@
                 </div>
                 
                 <div class="stream-control-panel">
-                    <div class="audio-selector">
-                        <span class="panel-label">AUDIO FEED:</span>
+                    <div class="audio-section">
+                        <span class="panel-label">RECEPTACLE CONTROLS // АУДИО:</span>
                         <div class="audio-buttons">
-                            <button class="audio-btn active">MAIN TV</button>
-                            <button class="audio-btn">COMMENTATOR #1</button>
-                            <button class="audio-btn">TEAM RADIO (LEC)</button>
+                            <button class="audio-btn active">P4/9 LIVE</button>
+                            <button class="audio-btn">RedRace Стрим</button>
+                            <button class="audio-btn">FX (Моторы)</button>
                         </div>
                     </div>
                     
-                    <div class="sync-delay-module">
-                        <span class="panel-label">DELAY SYNC:</span>
+                    <div class="sync-section">
+                        <span class="panel-label">DELAY CONTROL (СИНХРОНИЗАЦИЯ):</span>
                         <div class="sync-controls">
                             <button class="sync-step">-0.5s</button>
-                            <span class="sync-value digits">0.00s</span>
+                            <span class="sync-value digits">0.0s</span>
                             <button class="sync-step">+0.5s</button>
                         </div>
                     </div>
@@ -76,30 +65,27 @@
                 </div>
                 <div class="terminal-rows">
                     <div class="fia-row system">
-                        <span class="timestamp digits">15:02:11</span>
-                        <span class="message">TRACK CLEAR // DRS ENABLED</span>
+                        <span class="timestamp digits">18:02:11</span>
+                        <span class="message">TRACK CLEAR // OVERRIDE ENABLED</span>
                     </div>
                     <div class="fia-row track-limits">
-                        <span class="timestamp digits">15:05:44</span>
-                        <span class="message">LAP TIME DELETED – CAR 16 (LEC) – TURN 4 TRACK LIMITS</span>
+                        <span class="timestamp digits">18:05:44</span>
+                        <span class="message">LAP TIME DELETED – CAR 44 (HAM) – TURN 4 TRACK LIMITS</span>
                     </div>
                     <div class="fia-row investigation">
-                        <span class="timestamp digits">15:11:20</span>
-                        <span class="message">INCIDENT INVOLVING CAR 4 (NOR) AND CAR 1 (VER) NOTED – FORCING ANOTHER DRIVER OFF THE TRACK</span>
-                    </div>
-                    <div class="fia-row penalty">
-                        <span class="timestamp digits">15:14:02</span>
-                        <span class="message">5 SECOND TIME PENALTY IMPOSED TO CAR 4 (NOR) FOR CAUSING A COLLISION</span>
+                        <span class="timestamp digits">18:11:20</span>
+                        <span class="message">INCIDENT INVOLVING CAR 4 (NOR) AND CAR 1 (VER) NOTED</span>
                     </div>
                 </div>
             </div>
         </section>
 
         <section class="right-column">
+            
             <div class="leaderboard-card">
                 <div class="panel-header">
                     <h2>LIVE LEADERBOARD</h2>
-                    <span class="track-status green">TRACK GREEN</span>
+                    <span class="track-status green">LAP 14/57</span>
                 </div>
                 
                 <div class="table-scroller">
@@ -116,64 +102,81 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="team-mclaren">
+                            <tr class="team-redbull">
                                 <td class="pos digits">1</td>
-                                <td class="driver"><span class="team-stripe"></span><b>NOR</b><span class="team-fullname">L. Norris</span></td>
+                                <td class="driver"><span class="team-stripe"></span><b>VER</b></td>
                                 <td class="gap digits purple-text">INTERVAL</td>
                                 <td class="tyre center"><span class="tyre-badge m">M<small>12</small></span></td>
-                                <td class="pro-only digits right purple-text">18.421</td>
-                                <td class="pro-only digits right yellow-text">34.112</td>
-                                <td class="pro-only digits right">20.551</td>
+                                <td class="pro-only digits right text-purple">28.1</td>
+                                <td class="pro-only digits right text-green">39.4</td>
+                                <td class="pro-only digits right">23.2</td>
                             </tr>
                             <tr class="team-ferrari">
                                 <td class="pos digits">2</td>
-                                <td class="driver"><span class="team-stripe"></span><b>LEC</b><span class="team-fullname">C. Leclerc</span></td>
-                                <td class="gap digits">+1.184</td>
+                                <td class="driver"><span class="team-stripe"></span><b>LEC</b></td>
+                                <td class="gap digits">+1.420</td>
                                 <td class="tyre center"><span class="tyre-badge m">M<small>12</small></span></td>
-                                <td class="pro-only digits right yellow-text">18.550</td>
-                                <td class="pro-only digits right purple-text">33.998</td>
-                                <td class="pro-only digits right yellow-text">20.410</td>
+                                <td class="pro-only digits right text-green">28.3</td>
+                                <td class="pro-only digits right">39.6</td>
+                                <td class="pro-only digits right text-purple">23.0</td>
                             </tr>
-                            <tr class="team-mercedes">
+                            <tr class="team-mclaren">
                                 <td class="pos digits">3</td>
-                                <td class="driver"><span class="team-stripe"></span><b>RUS</b><span class="team-fullname">G. Russell</span></td>
-                                <td class="gap digits">+5.420</td>
-                                <td class="tyre center"><span class="tyre-badge s">S<small>4</small></span></td>
-                                <td class="pro-only digits right">18.612</td>
-                                <td class="pro-only digits right">34.340</td>
-                                <td class="pro-only digits right">20.690</td>
+                                <td class="driver"><span class="team-stripe"></span><b>NOR</b></td>
+                                <td class="gap digits">+3.150</td>
+                                <td class="tyre center"><span class="tyre-badge m">M<small>11</small></span></td>
+                                <td class="pro-only digits right">28.4</td>
+                                <td class="pro-only digits right">39.5</td>
+                                <td class="pro-only digits right">23.3</td>
                             </tr>
-                            <tr class="team-redbull">
+                            <tr class="team-ferrari">
                                 <td class="pos digits">4</td>
-                                <td class="driver"><span class="team-stripe"></span><b>VER</b><span class="team-fullname">M. Verstappen</span></td>
-                                <td class="gap digits">+6.115</td>
-                                <td class="tyre center"><span class="tyre-badge h">H<small>18</small></span></td>
-                                <td class="pro-only digits right">18.580</td>
-                                <td class="pro-only digits right">34.210</td>
-                                <td class="pro-only digits right">20.590</td>
+                                <td class="driver"><span class="team-stripe"></span><b>HAM</b></td>
+                                <td class="gap digits">+4.890</td>
+                                <td class="tyre center"><span class="tyre-badge s">S<small>3</small></span></td>
+                                <td class="pro-only digits right">28.5</td>
+                                <td class="pro-only digits right">39.8</td>
+                                <td class="pro-only digits right">23.5</td>
                             </tr>
                             <tr class="team-audi">
                                 <td class="pos digits">5</td>
-                                <td class="driver"><span class="team-stripe"></span><b>HUL</b><span class="team-fullname">N. Hulkenberg</span></td>
-                                <td class="gap digits">+12.890</td>
-                                <td class="tyre center"><span class="tyre-badge m">M<small>14</small></span></td>
-                                <td class="pro-only digits right">18.820</td>
-                                <td class="pro-only digits right">34.690</td>
-                                <td class="pro-only digits right">20.880</td>
+                                <td class="driver"><span class="team-stripe"></span><b>HUL</b></td>
+                                <td class="gap digits">+12.400</td>
+                                <td class="tyre center"><span class="tyre-badge h">H<small>14</small></span></td>
+                                <td class="pro-only digits right">28.9</td>
+                                <td class="pro-only digits right">40.2</td>
+                                <td class="pro-only digits right">23.8</td>
                             </tr>
                             <tr class="team-cadillac">
                                 <td class="pos digits">6</td>
-                                <td class="driver"><span class="team-stripe"></span><b>SAI</b><span class="team-fullname">C. Sainz</span></td>
-                                <td class="gap digits">+14.302</td>
-                                <td class="tyre center"><span class="tyre-badge s">S<small>6</small></span></td>
-                                <td class="pro-only digits right">18.790</td>
-                                <td class="pro-only digits right">34.810</td>
-                                <td class="pro-only digits right">20.910</td>
+                                <td class="driver"><span class="team-stripe"></span><b>BOT</b></td>
+                                <td class="gap digits">+15.210</td>
+                                <td class="tyre center"><span class="tyre-badge m">M<small>10</small></span></td>
+                                <td class="pro-only digits right">29.1</td>
+                                <td class="pro-only digits right">40.5</td>
+                                <td class="pro-only digits right">23.9</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            <div class="redrace-hub-panel">
+                <div class="panel-header">
+                    <h2>REDRACE HUB // ОПЕРАТИВНАЯ СВОДКА</h2>
+                </div>
+                <div class="hub-content">
+                    <div class="hub-row">
+                        <span class="hub-time digits text-red">18:02</span>
+                        <p class="hub-text"><b>Ферстаппен</b> сообщает о проблемах с зарядкой батареи. MGU-K не выдает полную мощность в режиме Override.</p>
+                    </div>
+                    <div class="hub-row alert">
+                        <span class="hub-time digits text-red">17:55</span>
+                        <p class="hub-text">🚨 <span class="alert-highlight">INCIDENT:</span> Контакт между Антонелли и Колапинто в 1-м повороте. Желтые флаги.</p>
+                    </div>
+                </div>
+            </div>
+
         </section>
     </main>
 
