@@ -223,6 +223,211 @@
                 btnPro.classList.remove('active');
             }
         }
+
+        // ════════════════════════════════════════════════════
+        // OPENF1 — LIVE TIMING
+        // ════════════════════════════════════════════════════
+        const OPENF1 = 'https://api.openf1.org/v1';
+
+        const TEAM_CLASS = {
+            1:'team-mercedes', 63:'team-mercedes',
+            44:'team-ferrari', 16:'team-ferrari',
+            4:'team-mclaren', 81:'team-mclaren',
+            33:'team-redbull', 22:'team-redbull',
+            30:'team-vcarb', 6:'team-vcarb',
+            27:'team-audi', 5:'team-audi',
+            10:'team-alpine', 43:'team-alpine',
+            87:'team-haas', 31:'team-haas',
+            23:'team-williams', 55:'team-williams',
+            11:'team-cadillac', 77:'team-cadillac',
+            18:'team-aston', 14:'team-aston',
+        };
+        const DRIVER_CODE = {
+            1:'ANT', 63:'RUS', 44:'HAM', 16:'LEC',
+            4:'NOR', 81:'PIA', 33:'VER', 22:'HAD',
+            30:'LAW', 6:'LIN', 27:'HUL', 5:'BOR',
+            10:'GAS', 43:'COL', 87:'BEA', 31:'OCO',
+            23:'ALB', 55:'SAI', 11:'PER', 77:'BOT',
+            18:'STR', 14:'ALO',
+        };
+        const DRIVER_FULL = {
+            1:'ANTONELLI', 63:'RUSSELL', 44:'HAMILTON', 16:'LECLERC',
+            4:'NORRIS', 81:'PIASTRI', 33:'VERSTAPPEN', 22:'HADJAR',
+            30:'LAWSON', 6:'LINDBLAD', 27:'HULKENBERG', 5:'BORTOLETO',
+            10:'GASLY', 43:'COLAPINTO', 87:'BEARMAN', 31:'OCON',
+            23:'ALBON', 55:'SAINZ', 11:'PEREZ', 77:'BOTTAS',
+            18:'STROLL', 14:'ALONSO',
+        };
+
+        async function fetchJSON(url) {
+            try { const r = await fetch(url); return r.ok ? await r.json() : []; }
+            catch { return []; }
+        }
+
+        async function getLatestSession() {
+            const data = await fetchJSON(`${OPENF1}/sessions?year=2026`);
+            if (!data.length) return null;
+            return data.sort((a,b) => new Date(b.date_start) - new Date(a.date_start))[0];
+        }
+
+        function gapText(iv) {
+            if (!iv) return '—';
+            const g = iv.gap_to_leader;
+            if (g == null || g === 0) return 'INTERVAL';
+            return typeof g === 'number' ? `+${g.toFixed(3)}` : String(g);
+        }
+
+        async function refreshTiming() {
+            const session = await getLatestSession();
+            if (!session) return;
+
+            const sessionBadge = document.querySelector('.session-badge');
+            if (sessionBadge) {
+                sessionBadge.innerHTML = `<span class="flag-dot">🏁</span> ${(session.meeting_name||'GP').toUpperCase()}`;
+            }
+
+            const [positions, intervals] = await Promise.all([
+                fetchJSON(`${OPENF1}/position?session_key=${session.session_key}`),
+                fetchJSON(`${OPENF1}/intervals?session_key=${session.session_key}`),
+            ]);
+            if (!positions.length) return;
+
+            const latest = {};
+            for (const p of positions) {
+                const d = p.driver_number;
+                if (!latest[d] || p.date > latest[d].date) latest[d] = p;
+            }
+            const ivMap = {};
+            for (const iv of intervals) {
+                const d = iv.driver_number;
+                if (!ivMap[d] || iv.date > ivMap[d].date) ivMap[d] = iv;
+            }
+
+            const sorted = Object.values(latest)
+                .sort((a,b) => (a.position||99) - (b.position||99))
+                .slice(0, 10);
+
+            renderPodium(sorted, ivMap);
+            renderTable(sorted, ivMap);
+            renderHUD(sorted[0]);
+        }
+
+        function renderPodium(sorted, ivMap) {
+            const cells = document.querySelectorAll('.podium-cell');
+            sorted.slice(0,3).forEach((row, i) => {
+                const cell = cells[i];
+                if (!cell) return;
+                const drv = row.driver_number;
+                cell.querySelector('.podium-driver').textContent = DRIVER_CODE[drv] || `#${drv}`;
+                cell.querySelector('.podium-gap').textContent = gapText(ivMap[drv]);
+                cell.className = 'podium-cell p' + (i+1) + ' ' + (TEAM_CLASS[drv] || '');
+            });
+        }
+
+        function renderTable(sorted, ivMap) {
+            const tbody = document.querySelector('.pitwall-table tbody');
+            if (!tbody) return;
+            tbody.innerHTML = sorted.map(row => {
+                const drv = row.driver_number;
+                const teamClass = TEAM_CLASS[drv] || '';
+                const code = DRIVER_CODE[drv] || `#${drv}`;
+                const gap = gapText(ivMap[drv]);
+                return `<tr class="${teamClass}">
+                    <td class="pos digits">${row.position}</td>
+                    <td class="driver"><span class="team-stripe"></span><b>${code}</b></td>
+                    <td class="gap digits">${gap}</td>
+                    <td class="tyre center"><span class="tyre-badge m">—</span></td>
+                    <td class="pro-only digits right">—</td>
+                    <td class="pro-only digits right">—</td>
+                    <td class="pro-only digits right">—</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderHUD(leader) {
+            if (!leader) return;
+            const hud = document.querySelector('.video-hud-corner');
+            if (!hud) return;
+            hud.querySelector('.hud-pos').textContent = 'P' + leader.position;
+            hud.querySelector('.hud-driver').textContent = DRIVER_FULL[leader.driver_number] || '';
+        }
+
+        refreshTiming();
+        setInterval(refreshTiming, 5000);
+
+        // ════════════════════════════════════════════════════
+        // RSS NEWS — читает /api/feed.json который готовит бэкенд бота
+        // (Render бот парсит RSS и отдаёт JSON, сайт его просто рисует)
+        // ════════════════════════════════════════════════════
+        const FEED_URL = 'https://liberty-formula-bot.onrender.com/api/feed.json';
+
+        async function refreshHub() {
+            try {
+                const r = await fetch(FEED_URL);
+                if (!r.ok) return; // бэкенд ещё не поднят — тихо пропускаем
+                const items = await r.json();
+                if (!Array.isArray(items) || !items.length) return;
+
+                const hub = document.querySelector('.hub-content');
+                if (!hub) return;
+                hub.innerHTML = items.slice(0, 8).map(item => `
+                    <div class="hub-row ${item.alert ? 'alert' : ''}">
+                        <span class="hub-time digits text-red">${item.time || ''}</span>
+                        <p class="hub-text">${item.alert ? '🚨 <span class="alert-highlight">INCIDENT:</span> ' : ''}${item.text}</p>
+                    </div>
+                `).join('');
+            } catch {
+                // бэкенд недоступен — оставляем то что уже на странице
+            }
+        }
+
+        refreshHub();
+        setInterval(refreshHub, 60000);
+
+        // ════════════════════════════════════════════════════
+        // RTBF STREAM — прямой m3u8 приходит с бэкенда (Streamlink)
+        // Бэкенд отдаёт ссылку, плеер её подставляет в video tag
+        // ════════════════════════════════════════════════════
+        const STREAM_URL = 'https://liberty-formula-bot.onrender.com/api/stream.json';
+
+        async function loadStream() {
+            try {
+                const r = await fetch(STREAM_URL);
+                if (!r.ok) return;
+                const data = await r.json();
+                if (!data.m3u8) return;
+
+                const box = document.querySelector('.video-ratio-box');
+                const placeholder = box.querySelector('.video-stream-placeholder');
+                if (placeholder) placeholder.remove();
+
+                let video = box.querySelector('video');
+                if (!video) {
+                    video = document.createElement('video');
+                    video.controls = true;
+                    video.style.position = 'absolute';
+                    video.style.inset = '0';
+                    video.style.width = '100%';
+                    video.style.height = '100%';
+                    box.insertBefore(video, box.firstChild);
+                }
+
+                if (data.m3u8.includes('.m3u8') && window.Hls && Hls.isSupported()) {
+                    const hls = new Hls();
+                    hls.loadSource(data.m3u8);
+                    hls.attachMedia(video);
+                    hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+                } else {
+                    video.src = data.m3u8;
+                    video.play().catch(() => {});
+                }
+            } catch {
+                // бэкенд/RTBF пока недоступны — плеер остаётся в режиме placeholder
+            }
+        }
+
+        loadStream();
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.12/dist/hls.min.js"></script>
 </body>
-</html>
+    </html>
