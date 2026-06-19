@@ -2,289 +2,360 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Liberty Formula | Command Center</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700;900&family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liberty Formula</title>
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&family=Rajdhani:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="bg-grid"></div>
     <div class="bg-gradient"></div>
-    <div class="bg-noise"></div>
 
-    <!-- ADMIN LOGIN MODAL -->
-    <div class="modal-overlay" id="adminLoginModal">
-        <div class="modal modal--small">
-            <div class="modal-header">
-                <div class="modal-title">Admin Access</div>
-                <button class="modal-close" id="closeAdminModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Username</label>
-                    <input type="text" class="form-input" id="adminUser" placeholder="Enter username">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" class="form-input" id="adminPass" placeholder="Enter password">
-                </div>
-                <div class="form-error" id="adminError"></div>
-                <button class="btn btn--primary btn--full" id="adminLoginBtn">Login</button>
-            </div>
+    <!-- ADMIN LOGIN -->
+    <div class="modal" id="adminModal">
+        <div class="modal-box">
+            <h3>Admin Access</h3>
+            <input type="text" id="adminUser" placeholder="Username">
+            <input type="password" id="adminPass" placeholder="Password">
+            <div class="error" id="adminError"></div>
+            <button onclick="checkAdmin()">Login</button>
         </div>
     </div>
 
-    <!-- ADMIN PANEL (hidden by default) -->
-    <div class="admin-bar" id="adminBar" style="display: none;">
-        <div class="admin-bar__content">
-            <span class="admin-bar__badge">🔒 ADMIN MODE</span>
-            <div class="admin-bar__actions">
-                <button class="admin-btn" id="adminRestartStream">Restart Stream</button>
-                <button class="admin-btn" id="adminClearCache">Clear Cache</button>
-                <button class="admin-btn" id="adminBroadcast">Send Broadcast</button>
-                <button class="admin-btn admin-btn--danger" id="adminLogout">Logout</button>
-            </div>
+    <!-- BROADCAST -->
+    <div class="modal" id="broadcastModal">
+        <div class="modal-box">
+            <h3>Broadcast</h3>
+            <textarea id="broadcastMsg" rows="3" placeholder="Message..."></textarea>
+            <button onclick="sendBroadcast()">Send</button>
+            <button onclick="closeModal('broadcastModal')" style="background:transparent;color:var(--text-2)">Cancel</button>
         </div>
+    </div>
+
+    <!-- ADMIN BAR -->
+    <div class="admin-bar" id="adminBar">
+        <span>🔒 ADMIN</span>
+        <button onclick="restartStream()">Restart</button>
+        <button onclick="clearCache()">Clear</button>
+        <button onclick="openModal('broadcastModal')">Broadcast</button>
+        <button onclick="adminLogout()" class="danger">Logout</button>
     </div>
 
     <!-- HEADER -->
-    <header class="header" id="header">
-        <div class="header-left">
-            <a href="#" class="logo">
-                <div class="logo-icon">LF</div>
-                <div class="logo-text">LIBERTY<span>FORMULA</span></div>
-            </a>
-            <div class="live-badge" id="liveBadge">
-                <div class="live-dot"></div>
-                <span>LIVE</span>
-            </div>
-            <div class="session-info" id="sessionInfo">
-                <img src="https://flagcdn.com/w80/gb.png" alt="Flag" class="session-flag" id="sessionFlag">
-                <div class="session-meta">
-                    <div class="session-name" id="sessionName">British GP — Race</div>
-                    <div class="session-track" id="sessionTrack">Silverstone Circuit</div>
-                </div>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">LF</div>
+            <div>LIBERTY<span style="color:var(--red)">FORMULA</span></div>
+        </div>
+        <div class="live"><div class="dot"></div>LIVE</div>
+        <div class="session">
+            <img src="https://flagcdn.com/w80/gb.png" id="flag">
+            <div>
+                <div id="gpName">British GP — Race</div>
+                <div id="gpTrack" style="font-size:11px;color:var(--text-2);text-transform:uppercase">Silverstone</div>
             </div>
         </div>
-        <div class="header-right">
-            <div class="mode-toggle" id="modeToggle">
-                <button class="mode-btn" data-mode="spectator">Spectator</button>
-                <button class="mode-btn active" data-mode="pitwall">Pitwall</button>
-                <button class="mode-btn" data-mode="admin" id="adminModeBtn">Admin</button>
-            </div>
-            <button class="settings-btn" id="settingsBtn" title="Stream Sources">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                </svg>
-            </button>
+        <div style="margin-left:auto;display:flex;gap:4px">
+            <button class="mode" onclick="setMode('spectator')">Spectator</button>
+            <button class="mode active" onclick="setMode('pitwall')">Pitwall</button>
+            <button class="mode" onclick="openModal('adminModal')">Admin</button>
         </div>
     </header>
 
-    <!-- ENGINE STATUS BAR -->
-    <div class="engine-bar" id="engineBar">
-        <span class="engine-bar__time" id="engineTime">[00:00:00]</span>
-        <span class="engine-bar__text">REDRACE ENGINE ONLINE // NO OVERRIDES</span>
-        <span class="engine-bar__mode" id="currentMode">PITWALL MODE</span>
+    <!-- ENGINE BAR -->
+    <div class="engine">
+        <span id="clock">[00:00:00]</span>
+        <span>REDRACE ENGINE ONLINE</span>
+        <span id="modeLabel">PITWALL</span>
     </div>
 
-    <!-- MOBILE TAB NAVIGATION -->
-    <nav class="mobile-tabs" id="mobileTabs">
-        <button class="mobile-tab active" data-tab="video">📺 Video</button>
-        <button class="mobile-tab" data-tab="standings">🏁 Standings</button>
-        <button class="mobile-tab" data-tab="telemetry">📊 Data</button>
-        <button class="mobile-tab" data-tab="news">📰 News</button>
-    </nav>
+    <!-- MOBILE NAV -->
+    <div class="mob-nav" id="mobNav">
+        <button onclick="mobTab('video')" class="active">📺</button>
+        <button onclick="mobTab('standings')">🏁</button>
+        <button onclick="mobTab('data')">📊</button>
+        <button onclick="mobTab('news')">📰</button>
+    </div>
 
-    <!-- MAIN LAYOUT -->
-    <main class="main-layout" id="mainLayout">
-        <!-- LEFT: VIDEO & CONTROLS -->
-        <section class="video-section" id="videoSection">
-            <div class="video-container" id="videoContainer">
-                <div class="video-source-badge" id="sourceBadge">WAITING FOR SOURCE</div>
-                <div class="video-placeholder" id="videoPlaceholder">
-                    <div class="video-placeholder__icon">📡</div>
-                    <div class="video-placeholder__text">Select a stream source</div>
-                    <div class="video-placeholder__hint">Use the settings button or dropdown below</div>
+    <!-- MAIN -->
+    <div class="main">
+        <!-- VIDEO -->
+        <div class="video-col" id="videoCol">
+            <div class="video-box">
+                <div class="v-badge" id="vBadge">WAITING</div>
+                <div class="v-placeholder" id="vPlaceholder">
+                    <div style="font-size:48px">📡</div>
+                    <div>Select stream source</div>
                 </div>
-                <video id="videoPlayer" style="display: none;" playsinline></video>
-                <iframe id="videoFrame" style="display: none;" allowfullscreen></iframe>
+                <video id="video" style="display:none" controls></video>
+                <iframe id="iframe" style="display:none" allowfullscreen></iframe>
+            </div>
+            <div class="controls">
+                <select id="srcSelect" onchange="loadStream(this.value)">
+                    <option value="">Source...</option>
+                    <optgroup label="🆓 Free">
+                        <option value="rtbf">RTBF (Belgium)</option>
+                        <option value="servus">ServusTV (Austria)</option>
+                        <option value="orf">ORF (Austria)</option>
+                        <option value="youtube">YouTube</option>
+                    </optgroup>
+                    <optgroup label="🔐 Paid">
+                        <option value="f1tv">F1 TV Pro</option>
+                        <option value="sky">Sky Sports</option>
+                    </optgroup>
+                    <option value="custom">🔗 Custom HLS</option>
+                </select>
+                <select id="audioSelect">
+                    <option value="ru">🇷🇺 RU Main</option>
+                    <option value="ru2">🇷🇺 RU Alt</option>
+                    <option value="en">🇬🇧 EN Sky</option>
+                    <option value="fx">🔊 FX</option>
+                </select>
+                <div class="delay-box" id="delayBox">
+                    <span>Delay</span>
+                    <input type="range" id="delay" min="0" max="30" step="0.5" value="0" oninput="document.getElementById('dVal').innerText=this.value+'s'">
+                    <span id="dVal" style="color:var(--red);font-weight:700;min-width:40px">0s</span>
+                </div>
+                <button onclick="sync()" id="syncBtn">🔄 Sync</button>
+            </div>
+        </div>
+
+        <!-- SIDEBAR -->
+        <div class="side-col" id="sideCol">
+            <div class="panel">
+                <div class="p-head">
+                    <div class="p-title">Standings</div>
+                    <span style="color:var(--text-3);font-size:12px" id="lapInfo">Lap 1/52</span>
+                </div>
+                <div id="standings"></div>
             </div>
 
-            <!-- VIDEO CONTROLS -->
-            <div class="video-controls" id="videoControls">
-                <div class="control-group">
-                    <span class="control-label">Source</span>
-                    <select class="control-select" id="sourceSelect">
-                        <option value="">Select stream...</option>
-                        <optgroup label="🆓 Free Sources">
-                            <option value="rtbf">RTBF Auvio (Belgium)</option>
-                            <option value="servus">ServusTV (Austria)</option>
-                            <option value="orf">ORF TVthek (Austria)</option>
-                            <option value="youtube">YouTube Live</option>
-                        </optgroup>
-                        <optgroup label="🔐 Subscription (Streamlink)">
-                            <option value="f1tv">F1 TV Pro</option>
-                            <option value="sky">Sky Sports F1</option>
-                            <option value="dazn">DAZN F1</option>
-                            <option value="fubo">fuboTV</option>
-                        </optgroup>
-                        <optgroup label="🔗 Custom">
-                            <option value="custom">Custom HLS/m3u8</option>
-                        </optgroup>
-                    </select>
+            <div class="panel" id="telePanel">
+                <div class="p-head">
+                    <div class="p-title">Telemetry</div>
+                    <span style="color:var(--green);font-size:11px;font-weight:700">LIVE</span>
                 </div>
-                <div class="control-group control-group--commentary">
-                    <span class="control-label">Audio</span>
-                    <select class="control-select" id="commentarySelect">
-                        <option value="ru-main">🇷🇺 RU Main</option>
-                        <option value="ru-alt">🇷🇺 RU Alt</option>
-                        <option value="en-sky">🇬🇧 EN Sky</option>
-                        <option value="fx">🔊 FX Track</option>
-                        <option value="clean">🎙️ Clean Feed</option>
-                    </select>
-                </div>
-                <div class="control-group control-group--delay" id="delayControl">
-                    <span class="control-label">Delay</span>
-                    <div class="delay-wrap">
-                        <input type="range" class="delay-slider" id="delaySlider" min="0" max="30" value="0" step="0.5">
-                        <span class="delay-value" id="delayValue">0.0s</span>
+                <div class="tele-grid">
+                    <div class="tele-item">
+                        <div class="t-label">Track</div>
+                        <div><span class="t-val" id="t1">--</span><span class="t-unit">°C</span></div>
+                        <div class="t-bar"><div id="b1"></div></div>
                     </div>
-                </div>
-                <div class="control-group control-group--sync" id="syncControl">
-                    <button class="btn btn--small btn--accent" id="syncBtn">🔄 Sync</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- RIGHT: SIDEBAR -->
-        <aside class="sidebar" id="sidebar">
-            <!-- STANDINGS -->
-            <div class="panel" id="standingsPanel">
-                <div class="panel-header">
-                    <div class="panel-title">Live Standings</div>
-                    <div class="panel-actions">
-                        <span class="panel-lap" id="currentLap">Lap 1/52</span>
-                        <button class="panel-refresh" id="refreshStandings">↻</button>
+                    <div class="tele-item">
+                        <div class="t-label">Air</div>
+                        <div><span class="t-val" id="t2">--</span><span class="t-unit">°C</span></div>
+                        <div class="t-bar"><div id="b2"></div></div>
                     </div>
-                </div>
-                <div class="standings-list" id="standingsList">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-
-            <!-- TELEMETRY (Pitwall & Admin only) -->
-            <div class="panel panel--telemetry" id="telemetryPanel">
-                <div class="panel-header">
-                    <div class="panel-title">Telemetry</div>
-                    <div class="panel-actions">
-                        <span class="panel-status panel-status--live">LIVE</span>
+                    <div class="tele-item">
+                        <div class="t-label">Humidity</div>
+                        <div><span class="t-val" id="t3">--</span><span class="t-unit">%</span></div>
+                        <div class="t-bar"><div id="b3"></div></div>
                     </div>
-                </div>
-                <div class="telemetry-grid" id="telemetryGrid">
-                    <div class="telemetry-item">
-                        <div class="telemetry-label">Track Temp</div>
-                        <div class="telemetry-value-wrap">
-                            <span class="telemetry-value telemetry-value--temp" id="trackTemp">--</span>
-                            <span class="telemetry-unit">°C</span>
-                        </div>
-                        <div class="telemetry-bar"><div class="telemetry-bar-fill" id="trackTempBar" style="width: 0%"></div></div>
-                    </div>
-                    <div class="telemetry-item">
-                        <div class="telemetry-label">Air Temp</div>
-                        <div class="telemetry-value-wrap">
-                            <span class="telemetry-value" id="airTemp">--</span>
-                            <span class="telemetry-unit">°C</span>
-                        </div>
-                        <div class="telemetry-bar"><div class="telemetry-bar-fill" id="airTempBar" style="width: 0%"></div></div>
-                    </div>
-                    <div class="telemetry-item">
-                        <div class="telemetry-label">Humidity</div>
-                        <div class="telemetry-value-wrap">
-                            <span class="telemetry-value" id="humidity">--</span>
-                            <span class="telemetry-unit">%</span>
-                        </div>
-                        <div class="telemetry-bar"><div class="telemetry-bar-fill" id="humidityBar" style="width: 0%"></div></div>
-                    </div>
-                    <div class="telemetry-item">
-                        <div class="telemetry-label">Wind</div>
-                        <div class="telemetry-value-wrap">
-                            <span class="telemetry-value" id="windSpeed">--</span>
-                            <span class="telemetry-unit">km/h</span>
-                        </div>
-                        <div class="telemetry-bar"><div class="telemetry-bar-fill" id="windBar" style="width: 0%"></div></div>
-                    </div>
-                    <div class="telemetry-item telemetry-item--wide" id="rainItem">
-                        <div class="telemetry-label">Rain Probability</div>
-                        <div class="telemetry-value-wrap">
-                            <span class="telemetry-value telemetry-value--info" id="rainProb">--</span>
-                            <span class="telemetry-unit">%</span>
-                        </div>
-                        <div class="telemetry-bar"><div class="telemetry-bar-fill telemetry-bar-fill--blue" id="rainBar" style="width: 0%"></div></div>
+                    <div class="tele-item">
+                        <div class="t-label">Wind</div>
+                        <div><span class="t-val" id="t4">--</span><span class="t-unit">km/h</span></div>
+                        <div class="t-bar"><div id="b4"></div></div>
                     </div>
                 </div>
             </div>
 
-            <!-- RACE CONTROL -->
-            <div class="panel" id="raceControlPanel">
-                <div class="panel-header">
-                    <div class="panel-title">Race Control</div>
-                </div>
-                <div class="news-ticker" id="raceControlFeed">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-        </aside>
-    </main>
-
-    <!-- STREAM SOURCES MODAL -->
-    <div class="modal-overlay" id="sourcesModal">
-        <div class="modal">
-            <div class="modal-header">
-                <div class="modal-title">Stream Sources</div>
-                <button class="modal-close" id="modalClose">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="source-tabs">
-                    <button class="source-tab active" data-filter="all">All</button>
-                    <button class="source-tab" data-filter="free">🆓 Free</button>
-                    <button class="source-tab" data-filter="sub">🔐 Sub</button>
-                </div>
-                <div class="source-list" id="sourceList">
-                    <!-- Populated by JS -->
-                </div>
-                <div class="source-help">
-                    <strong>Streamlink Setup:</strong><br>
-                    Install: <code>pip install streamlink</code><br>
-                    Free: RTBF, ServusTV, ORF need VPN to respective countries.<br>
-                    Run proxy: <code>streamlink --player-external-http URL best</code>
-                </div>
+            <div class="panel">
+                <div class="p-head"><div class="p-title">Race Control</div></div>
+                <div class="news" id="news"></div>
             </div>
         </div>
     </div>
 
-    <!-- BROADCAST MODAL (Admin only) -->
-    <div class="modal-overlay" id="broadcastModal">
-        <div class="modal modal--small">
-            <div class="modal-header">
-                <div class="modal-title">Send Broadcast</div>
-                <button class="modal-close" id="closeBroadcast">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Message</label>
-                    <textarea class="form-input form-input--area" id="broadcastMsg" rows="3" placeholder="Enter broadcast message..."></textarea>
-                </div>
-                <button class="btn btn--primary btn--full" id="sendBroadcastBtn">Send to All Users</button>
-            </div>
+    <!-- TOAST -->
+    <div class="toast-box" id="toastBox"></div>
+
+<script>
+const API = 'https://libertyformula-production-4740.up.railway.app';
+const SRC = {
+    rtbf:{name:'RTBF',type:'sl',url:'https://auvio.rtbf.be',free:true},
+    servus:{name:'ServusTV',type:'sl',url:'https://www.servustv.com',free:true},
+    orf:{name:'ORF',type:'sl',url:'https://tvthek.orf.at',free:true},
+    youtube:{name:'YouTube',type:'ifr',url:'https://www.youtube.com/embed/live_stream?channel=UCB_qr75-ydFVKSF9Dmo6izg',free:true},
+    f1tv:{name:'F1 TV',type:'sl',url:'https://f1tv.formula1.com',free:false},
+    sky:{name:'Sky',type:'sl',url:'https://www.skysports.com/watch/sky-sports-f1',free:false},
+    custom:{name:'Custom',type:'hls',url:'',free:true}
+};
+let mode='pitwall', admin=false, currentSrc=null;
+
+// CLOCK
+setInterval(()=>{
+    const t=new Date().toTimeString().split(' ')[0];
+    document.getElementById('clock').innerText='['+t+']';
+},1000);
+
+// MODAL
+function openModal(id){document.getElementById(id).style.display='flex'}
+function closeModal(id){document.getElementById(id).style.display='none'}
+document.querySelectorAll('.modal').forEach(m=>{
+    m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id)});
+});
+
+// ADMIN
+function checkAdmin(){
+    const u=document.getElementById('adminUser').value;
+    const p=document.getElementById('adminPass').value;
+    if(u==='Kimi'&&p==='BWOAH2026'){
+        admin=true;closeModal('adminModal');
+        setMode('admin');
+        toast('Admin OK','ok');
+    }else{
+        document.getElementById('adminError').innerText='Wrong creds';
+    }
+}
+function adminLogout(){admin=false;setMode('pitwall');document.getElementById('adminBar').style.display='none'}
+function restartStream(){if(currentSrc){loadStream(currentSrc);toast('Restarted','ok')}}
+function clearCache(){loadMock();toast('Cleared','ok')}
+function sendBroadcast(){
+    const msg=document.getElementById('broadcastMsg').value;
+    if(!msg)return;
+    const t=new Date().toTimeString().substr(0,5);
+    addNews(t,'[ADMIN] '+msg,'var(--red)');
+    document.getElementById('broadcastMsg').value='';
+    closeModal('broadcastModal');
+    toast('Sent','ok');
+}
+
+// MODE
+function setMode(m){
+    mode=m;
+    document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('active',b.innerText.toLowerCase().includes(m)));
+    document.body.setAttribute('data-mode',m);
+    document.getElementById('modeLabel').innerText=m.toUpperCase();
+    document.getElementById('adminBar').style.display=(m==='admin')?'flex':'none';
+    const hide=m==='spectator';
+    document.getElementById('delayBox').style.display=hide?'none':'flex';
+    document.getElementById('syncBtn').style.display=hide?'none':'inline-flex';
+    document.getElementById('telePanel').style.display=hide?'none':'block';
+}
+
+// STREAM
+function loadStream(key){
+    if(!key){showPlaceholder();return}
+    const s=SRC[key];currentSrc=key;
+    document.getElementById('vBadge').innerText=s.name.toUpperCase();
+    document.getElementById('vPlaceholder').style.display='none';
+    document.getElementById('video').style.display='none';
+    document.getElementById('iframe').style.display='none';
+    if(s.type==='ifr'){
+        document.getElementById('iframe').style.display='block';
+        document.getElementById('iframe').src=s.url;
+    }else if(s.type==='hls'){
+        const url=prompt('HLS URL:');if(!url){showPlaceholder();return}
+        document.getElementById('video').style.display='block';
+        document.getElementById('video').src=url;
+        document.getElementById('video').play();
+    }else{
+        // Streamlink - show instructions
+        document.getElementById('vPlaceholder').style.display='flex';
+        document.getElementById('vPlaceholder').innerHTML=`<div style="font-size:32px">⚙️</div><div>Run locally:</div><code style="background:#1a1a24;padding:4px 8px;border-radius:4px;color:var(--red);font-size:11px">streamlink "${s.url}" best --player-external-http</code><br><button onclick="promptProxy()" style="margin-top:8px;padding:6px 14px;background:var(--red);border:none;border-radius:6px;color:#fff;cursor:pointer">Enter proxy URL</button>`;
+    }
+}
+function promptProxy(){
+    const url=prompt('Proxy URL (http://localhost:PORT):');
+    if(url){
+        document.getElementById('vPlaceholder').style.display='none';
+        document.getElementById('video').style.display='block';
+        document.getElementById('video').src=url;
+        document.getElementById('video').play();
+    }
+}
+function showPlaceholder(){
+    document.getElementById('vPlaceholder').style.display='flex';
+    document.getElementById('vPlaceholder').innerHTML='<div style="font-size:48px">📡</div><div>Select stream source</div>';
+    document.getElementById('video').style.display='none';
+    document.getElementById('iframe').style.display='none';
+    document.getElementById('vBadge').innerText='WAITING';
+    currentSrc=null;
+}
+function sync(){
+    const v=document.getElementById('video');
+    const d=parseFloat(document.getElementById('delay').value);
+    if(v&&v.currentTime){v.currentTime-=d;toast('Synced -'+d+'s','ok')}
+}
+
+// MOBILE
+function mobTab(tab){
+    document.querySelectorAll('.mob-nav button').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick').includes(tab)));
+    const v=document.getElementById('videoCol');
+    const s=document.getElementById('sideCol');
+    if(tab==='video'){v.style.display='flex';s.style.display='none'}
+    else{v.style.display='none';s.style.display='flex';s.style.flexDirection='column'}
+}
+
+// DATA
+function loadMock(){
+    const drivers=[
+        {p:1,name:'Lando Norris',team:'McLaren',num:4,gap:'LEADER'},
+        {p:2,name:'Lewis Hamilton',team:'Ferrari',num:44,gap:'+2.341'},
+        {p:3,name:'Kimi Antonelli',team:'Mercedes',num:12,gap:'+5.892'},
+        {p:4,name:'Max Verstappen',team:'Red Bull',num:1,gap:'+8.156'},
+        {p:5,name:'Fernando Alonso',team:'Aston Martin',num:14,gap:'+12.403'},
+        {p:6,name:'George Russell',team:'Mercedes',num:63,gap:'+15.221'},
+        {p:7,name:'Charles Leclerc',team:'Ferrari',num:16,gap:'+18.994'},
+        {p:8,name:'Oscar Piastri',team:'McLaren',num:81,gap:'+22.117'},
+        {p:9,name:'Carlos Sainz',team:'Williams',num:55,gap:'+25.883'},
+        {p:10,name:'Liam Lawson',team:'Racing Bulls',num:30,gap:'+31.442'}
+    ];
+    const colors=['#FF8000','#E80020','#27F4D2','#3671C6','#229971','#27F4D2','#E80020','#FF8000','#64C4FF','#6692FF'];
+    document.getElementById('standings').innerHTML=drivers.map(d=>`
+        <div class="driver" style="border-left-color:${colors[d.p-1]}">
+            <div class="pos">P${d.p}</div>
+            <div class="info"><div>${d.name}</div><div class="team">${d.team}</div></div>
+            <div style="text-align:right"><div class="num">${d.num}</div><div class="gap">${d.gap}</div></div>
         </div>
-    </div>
+    `).join('');
 
-    <!-- TOAST NOTIFICATIONS -->
-    <div class="toast-container" id="toastContainer"></div>
+    document.getElementById('t1').innerText='42';document.getElementById('b1').style.width='70%';
+    document.getElementById('t2').innerText='28';document.getElementById('b2').style.width='55%';
+    document.getElementById('t3').innerText='65';document.getElementById('b3').style.width='65%';
+    document.getElementById('t4').innerText='12';document.getElementById('b4').style.width='40%';
 
-    <script src="main.js"></script>
+    const news=document.getElementById('news');
+    news.innerHTML=`<div class="n-item"><span class="n-time">12:00</span><span><strong>RACE START</strong> — Formation lap</span></div>
+    <div class="n-item"><span class="n-time">11:58</span><span>All on <strong>SOFT</strong></span></div>
+    <div class="n-item"><span class="n-time">11:55</span><span>Track <strong>DRY</strong></span></div>`;
+}
+function addNews(time,msg,color){
+    const n=document.getElementById('news');
+    const d=document.createElement('div');d.className='n-item';
+    d.innerHTML=`<span class="n-time">${time}</span><span style="color:${color||'var(--text-2)'}">${msg}</span>`;
+    n.insertBefore(d,n.firstChild);
+}
+
+// TOAST
+function toast(msg,type){
+    const box=document.getElementById('toastBox');
+    const t=document.createElement('div');t.className='toast';
+    if(type==='ok')t.style.borderColor='rgba(0,255,136,0.3)';t.style.color='var(--green)';
+    t.innerText=msg;box.appendChild(t);
+    setTimeout(()=>t.remove(),3000);
+}
+
+// API
+async function fetchData(){
+    try{
+        const r=await fetch(API+'/api/f1/weather?session_key=latest');
+        if(!r.ok)return;
+        const d=await r.json();
+        if(d.length){const l=d[d.length-1];updateTele(l)}
+    }catch(e){}
+}
+function updateTele(d){
+    if(d.track_temperature!==undefined){document.getElementById('t1').innerText=Math.round(d.track_temperature);document.getElementById('b1').style.width=Math.min(d.track_temperature,100)+'%'}
+    if(d.air_temperature!==undefined){document.getElementById('t2').innerText=Math.round(d.air_temperature);document.getElementById('b2').style.width=Math.min(d.air_temperature*2,100)+'%'}
+    if(d.humidity!==undefined){document.getElementById('t3').innerText=Math.round(d.humidity);document.getElementById('b3').style.width=d.humidity+'%'}
+    if(d.wind_speed!==undefined){document.getElementById('t4').innerText=Math.round(d.wind_speed);document.getElementById('b4').style.width=Math.min(d.wind_speed*2,100)+'%'}
+}
+
+// INIT
+loadMock();
+setInterval(fetchData,5000);
+fetchData();
+</script>
 </body>
-  </html>
+</html>
