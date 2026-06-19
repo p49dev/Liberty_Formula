@@ -1,704 +1,161 @@
-/* ==========================================================================
-   ОБНУЛЕНИЕ И ШРИФТЫ
-   ========================================================================== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-font-smoothing: antialiased;
-}
-
+/* ================= КОЛОРИСТИКА КОМАНД F1 2026 ================= */
 :root {
-    --bg-base: #050507;
-    --bg-card: #0c0c10;
-    --bg-panel: #0e0e12;
-    --border-line: rgba(255, 255, 255, 0.06);
-
+    --bg-dark: #09090b;
+    --bg-panel: #121214;
+    --accent-red: #e10600;
+    --accent-red-hover: #b90500;
     --text-main: #ffffff;
-    --text-body: #9da0b0;
-    --text-muted: #4e5060;
+    --text-muted: #a1a1aa;
+    --border-color: #27272a;
+    --f1-yellow: #fff200;
+    --f1-blue: #3b82f6;
+    --f1-green: #22c55e;
 
-    --f1-red: #e10600;
-    --f1-yellow: #ffd400;
-    --f1-green: #00d166;
-    --f1-purple: #b800ff;
-
-    /* ЦВЕТА КОМАНД 2026 */
-    --clr-redbull: #1e41ff;
-    --clr-ferrari: #ef1c24;
-    --clr-mercedes: #00a398;
-    --clr-mclaren: #ff8000;
-    --clr-aston: #229971;
-    --clr-alpine: #0090ff;
-    --clr-williams: #005aff;
-    --clr-haas: #ffffff;
-    --clr-sauber: #52e252;
-    --clr-rb: #6692ff;
+    /* Цвета 2026 */
+    --team-mercedes: #00A19B;
+    --team-ferrari: #E8002D;
+    --team-mclaren: #FF8000;
+    --team-redbull: #1E41FF;
+    --team-aston: #229971;
+    --team-alpine: #0090FF;
+    --team-williams: #005AFF;
+    --team-racingbulls: #1534CC;
+    --team-haas: #ED1A3B;
+    --team-audi: #F50537;
+    --team-cadillac: #EAB308;
 }
 
+.border-mercedes { border-left-color: var(--team-mercedes) !important; }
+.border-ferrari { border-left-color: var(--team-ferrari) !important; }
+.border-mclaren { border-left-color: var(--team-mclaren) !important; }
+.border-redbull { border-left-color: var(--team-redbull) !important; }
+.border-aston { border-left-color: var(--team-aston) !important; }
+.border-alpine { border-left-color: var(--team-alpine) !important; }
+.border-williams { border-left-color: var(--team-williams) !important; }
+.border-racingbulls { border-left-color: var(--team-racingbulls) !important; }
+.border-haas { border-left-color: var(--team-haas) !important; }
+.border-audi { border-left-color: var(--team-audi) !important; }
+.border-cadillac { border-left-color: var(--team-cadillac) !important; }
+
+/* ================= БАЗОВЫЕ НАСТРОЙКИ ================= */
 body {
-    background-color: var(--bg-base);
+    background-color: var(--bg-dark);
     color: var(--text-main);
-    font-family: 'Inter', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0; 
+    padding: 0;
     overflow-x: hidden;
 }
 
-.digits {
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 700;
-}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #52525b; }
 
-/* ==========================================================================
-   ШАПКА САЙТА (TOP BAR)
-   ========================================================================== */
+/* ================= ШАПКА ================= */
 .top-bar {
-    background-color: var(--bg-panel);
-    border-bottom: 1px solid var(--border-line);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    gap: 10px;
-}
-
-.brand-section {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.live-indicator {
-    font-family: 'Titillium Web', sans-serif;
-    font-weight: 900;
-    font-size: 12px;
-    letter-spacing: 0.5px;
-    color: var(--f1-red);
-    border: 1px solid rgba(225, 6, 0, 0.2);
-    padding: 2px 6px;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(225, 6, 0, 0.05);
-}
-
-.live-dot {
-    width: 6px;
-    height: 6px;
-    background-color: var(--f1-red);
-    border-radius: 50%;
-    display: inline-block;
-    box-shadow: 0 0 6px var(--f1-red);
-}
-
-.logo-text {
-    font-family: 'Archivo Black', sans-serif;
-    font-size: 16px;
-    letter-spacing: -0.5px;
-}
-
-.logo-text span {
-    color: var(--f1-red);
-}
-
-.controls-hub {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    justify-content: space-between;
-    width: 100%;
-}
-
-.mode-selector {
-    display: flex;
-    background: #141419;
-    padding: 2px;
-    border-radius: 4px;
-    border: 1px solid var(--border-line);
-}
-
-.mode-btn {
-    background: none;
-    border: none;
-    color: var(--text-body);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 5px 12px;
-    cursor: pointer;
-    border-radius: 3px;
-    transition: all 0.15s ease;
-}
-
-.mode-btn.active {
     background: var(--bg-panel);
-    color: var(--text-main);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.session-badge {
-    font-family: 'Titillium Web', sans-serif;
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 0.5px;
-    background: #141419;
-    padding: 4px 10px;
-    border-radius: 4px;
-    border: 1px solid var(--border-line);
+    height: 60px;
     display: flex;
     align-items: center;
-    gap: 6px;
-}
-
-/* ==========================================================================
-   РАБОЧЕЕ ПРОСТРАНСТВО (РАСКЛАДКА ГРИДОВ)
-   ========================================================================== */
-.workspace-grid {
-    display: flex;
-    flex-direction: column;
-}
-
-.left-column {
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-/* ==========================================================================
-   ВИДЕОПЛЕЕР С ЭФФЕКТАМИ
-   ========================================================================== */
-.video-panel {
-    background-color: var(--bg-panel);
-    border: 1px solid var(--border-line);
-    border-radius: 6px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-}
-
-.video-ratio-box {
-    position: relative;
-    width: 100%;
-    padding-top: 56.25%; /* 16:9 Aspect Ratio */
-    background: #000;
-}
-
-.video-stream-placeholder {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    color: var(--text-muted);
-    font-family: 'Titillium Web', sans-serif;
-    font-weight: 700;
-    font-size: 11px;
-    letter-spacing: 1px;
-}
-
-.spinner {
-    width: 24px;
-    height: 24px;
-    border: 2px solid rgba(255,255,255,0.05);
-    border-top-color: var(--f1-red);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-.video-hud-corner {
-    position: absolute;
-    bottom: 15px;
-    left: 15px;
-    background: rgba(12, 12, 16, 0.75);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.05);
-    padding: 4px 10px;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: 'Titillium Web', sans-serif;
-    pointer-events: none;
-}
-
-.hud-pos {
-    background: var(--f1-red);
-    font-weight: 900;
-    font-size: 11px;
-    padding: 1px 4px;
-    border-radius: 2px;
-}
-
-.hud-driver {
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 0.5px;
-}
-
-/* ==========================================================================
-   ПОДИУМ (СТРИП-ПАНЕЛЬ)
-   ========================================================================== */
-.podium-strip {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-}
-
-.podium-cell {
-    background-color: var(--bg-panel);
-    border: 1px solid var(--border-line);
-    border-radius: 4px;
-    padding: 10px 15px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    position: relative;
-    overflow: hidden;
-}
-
-.team-stripe {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-}
-
-/* Цвета командных плашек */
-.clr-redbull .team-stripe { background-color: var(--clr-redbull); }
-.clr-ferrari .team-stripe { background-color: var(--clr-ferrari); }
-.clr-mclaren .team-stripe { background-color: var(--clr-mclaren); }
-
-.podium-pos {
-    font-size: 16px;
-    color: var(--text-muted);
-}
-
-.podium-driver {
-    font-weight: 700;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-}
-
-.podium-gap {
-    margin-left: auto;
-    font-size: 11px;
-    color: var(--text-body);
-}
-
-.purple-text { color: var(--f1-purple); }
-
-/* ==========================================================================
-   ТАБЛИЦА СЕССИИ (PIT WALL TABLE)
-   ========================================================================== */
-.table-scroller {
-    background-color: var(--bg-panel);
-    border: 1px solid var(--border-line);
-    border-radius: 6px;
-    overflow-x: auto;
-}
-
-.pitwall-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-    font-size: 12px;
-}
-
-.pitwall-table th {
-    background: #111116;
-    font-family: 'Titillium Web', sans-serif;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 10px;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-    padding: 10px 15px;
-    border-bottom: 1px solid var(--border-line);
-}
-
-.pitwall-table td {
-    padding: 12px 15px;
-    border-bottom: 1px solid rgba(255,255,255,0.02);
-    vertical-align: middle;
-}
-
-.pitwall-table tr:last-child td {
-    border-bottom: none;
-}
-
-.pitwall-table tr {
-    position: relative;
-}
-
-.pitwall-table .team-stripe {
-    position: absolute;
-    left: 0;
-    top: 4px;
-    bottom: 4px;
-    width: 3px;
-    border-radius: 0 2px 2px 0;
-}
-
-.pitwall-table tr:hover {
-    background: rgba(255,255,255,0.01);
-}
-
-.pitwall-table .pos {
-    color: var(--text-muted);
-    width: 40px;
-}
-
-.pitwall-table .driver {
-    padding-left: 20px;
-    font-size: 13px;
-    color: var(--text-main);
-}
-
-.pitwall-table .gap {
-    color: var(--text-body);
-}
-
-.tyre-badge {
-    display: inline-block;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    text-align: center;
-    line-height: 16px;
-    font-size: 10px;
-    font-weight: 900;
-    font-family: 'Archivo Black', sans-serif;
-    border: 1px solid transparent;
-}
-
-.tyre-badge.m { border-color: var(--f1-yellow); color: var(--f1-yellow); }
-.tyre-badge.s { border-color: var(--f1-red); color: var(--f1-red); }
-.tyre-badge.h { border-color: #fff; color: #fff; }
-
-.center { text-align: center; }
-.right { text-align: right; }
-
-/* ==========================================================================
-   ХАБ НОВОСТЕЙ (RED RACE FEED)
-   ========================================================================== */
-.hub-panel {
-    background-color: var(--bg-panel);
-    border-top: 1px solid var(--border-line);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-}
-
-.hub-panel h2 {
-    font-family: 'Titillium Web', sans-serif;
-    font-weight: 900;
-    font-size: 13px;
-    letter-spacing: 1px;
-    color: var(--text-main);
-}
-
-.hub-timeline {
-    margin-top: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    overflow-y: auto;
-}
-
-.hub-row {
-    background: #111116;
-    border: 1px solid var(--border-line);
-    border-radius: 4px;
-    padding: 10px 15px;
-    display: flex;
-    gap: 15px;
-    align-items: flex-start;
-    transition: transform 0.2s ease;
-}
-
-.hub-row:hover {
-    border-color: rgba(255,255,255,0.12);
-}
-
-.hub-row.alert {
-    background: rgba(225, 6, 0, 0.03);
-    border: 1px solid rgba(225, 6, 0, 0.1);
-}
-
-.hub-time {
-    font-size: 11px;
-    font-weight: 700;
-    min-width: 35px;
-    padding-top: 1px;
-}
-.text-red { color: var(--f1-red); }
-
-.hub-text {
-    font-size: 12px;
-    color: #e2e4eb;
-    line-height: 1.4;
-}
-
-.alert-highlight {
-    color: var(--f1-yellow);
-    font-weight: 700;
-}
-
-/* ==========================================================================
-   АДАПТАЦИЯ ДЕСКТОП ( СЕТКА GRID )
-   ========================================================================== */
-@media (min-width: 993px) {
-    .workspace-grid {
-        display: grid;
-        grid-template-columns: 2.6fr 1.4fr;
-        height: calc(100vh - 50px);
-    }
-    .workspace-grid.mode-pro-active {
-        grid-template-columns: 1.6fr 2.4fr;
-    }
-    .top-bar {
-        flex-direction: row;
-        height: 50px;
-        padding: 0 20px;
-    }
-    .brand-section, .controls-hub { width: auto; }
-    .controls-hub { gap: 25px; }
-    .hub-panel {
-        border-top: none;
-        border-left: 1px solid var(--border-line);
-        height: 100%;
-    }
-    .hub-timeline {
-        flex: 1;
-    }
-    .left-column {
-        height: 100%;
-        overflow-y: auto;
-    }
-    .pro-only { display: none; }
-    .mode-pro-active .pro-only { display: table-cell; }
-    .mode-pro-active .spectator-only { display: none; }
-}
-
-@media (max-width: 992px) {
-    .pro-only { display: none; }
-}
-
-
-/* ==========================================================================
-   ДОБАВЛЕННЫЕ ПЛАГИНЫ (НОВЫЕ ФИЧИ, БЕЗ СЛОМА СТАРОЙ ВЕРСТКИ)
-   ========================================================================== */
-
-/* Кнопка Бургера в шапке */
-.menu-toggle-btn {
-    background: none;
-    border: none;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 18px;
-    height: 13px;
-    cursor: pointer;
-    padding: 0;
-}
-.menu-toggle-btn span {
-    width: 100%;
-    height: 2px;
-    background-color: var(--text-main);
-    transition: 0.2s ease;
-}
-.menu-toggle-btn:hover span {
-    background-color: var(--f1-red);
-}
-
-/* Слайд-панель Sidebar */
-.sidebar {
-    position: fixed;
-    top: 0;
-    left: -280px;
-    width: 280px;
-    height: 100vh;
-    background: #08080b;
-    border-right: 1px solid var(--border-line);
-    z-index: 9999;
-    padding: 25px;
-    display: flex;
-    flex-direction: column;
-    transition: left 0.3s cubic-bezier(0.77, 0, 0.175, 1);
-}
-.sidebar.open {
-    left: 0;
-}
-.sidebar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    border-bottom: 1px solid var(--border-line);
-    padding-bottom: 15px;
-}
-.sidebar-header h3 {
-    font-family: 'Titillium Web', sans-serif;
-    font-weight: 900;
-    font-size: 13px;
-    letter-spacing: 1px;
-    color: var(--f1-red);
-}
-.close-menu-btn {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 22px;
-    cursor: pointer;
-    line-height: 1;
-}
-.close-menu-btn:hover { color: var(--text-main); }
-
-.sidebar-section {
-    margin-bottom: 30px;
-}
-.sidebar-section h4 {
-    font-size: 10px;
-    color: var(--text-muted);
-    letter-spacing: 1px;
-    margin-bottom: 12px;
-    font-family: 'Titillium Web', sans-serif;
-}
-.sidebar-link {
-    display: block;
-    color: var(--text-body);
-    text-decoration: none;
-    font-size: 13px;
-    padding: 8px 10px;
-    border-radius: 4px;
-    transition: 0.2s;
-    margin-bottom: 4px;
-}
-.sidebar-link:hover, .sidebar-link.active {
-    background: rgba(255, 255, 255, 0.03);
-    color: var(--text-main);
-}
-.badge-coming {
-    background: var(--f1-purple);
-    color: #fff;
-    font-size: 8px;
-    font-weight: 700;
-    padding: 1px 4px;
-    border-radius: 2px;
-    margin-left: 5px;
-}
-.sidebar-footer {
-    margin-top: auto;
-    font-size: 10px;
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--text-muted);
-}
-
-/* Пульт управления RTBF под плеером */
-.rtbf-control-bar {
-    background: var(--bg-panel);
-    border-top: 1px solid var(--border-line);
-    padding: 10px 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 11px;
-}
-.rtbf-status {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* Разноцветные неоновые индикаторы прокси-сервера Streamlink */
-.status-pulse-green, .status-pulse-yellow, .status-pulse-red {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    animation: statusPulse 2s infinite ease-in-out;
-}
-.status-pulse-green { background-color: var(--f1-green); box-shadow: 0 0 8px var(--f1-green); }
-.status-pulse-yellow { background-color: var(--f1-yellow); box-shadow: 0 0 8px var(--f1-yellow); }
-.status-pulse-red { background-color: var(--f1-red); box-shadow: 0 0 8px var(--f1-red); }
-
-@keyframes statusPulse {
-    0% { opacity: 0.3; }
-    50% { opacity: 1; }
-    100% { opacity: 0.3; }
-}
-.rtbf-label { color: var(--text-body); }
-.rtbf-label b { color: var(--text-main); }
-
-.rtbf-actions {
-    display: flex;
-    align-items: center;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border-color);
     gap: 20px;
-}
-.audio-sync-box {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--text-body);
-}
-.audio-sync-box input[type="range"] {
-    width: 70px;
-    accent-color: var(--f1-red);
-    cursor: pointer;
-}
-#delay-val {
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--f1-yellow);
-    width: 35px;
-}
-.rtbf-select {
-    background: #141419;
-    border: 1px solid var(--border-line);
-    color: var(--text-main);
-    padding: 3px 6px;
-    font-size: 11px;
-    border-radius: 3px;
-    outline: none;
-    cursor: pointer;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-/* Фильтры новостей в RSS ленте */
-.hub-header {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    border-bottom: 1px solid var(--border-line);
-    padding-bottom: 15px;
-}
-.hub-filters {
-    display: flex;
-    gap: 6px;
-}
-.filter-tag {
-    background: #141419;
-    border: 1px solid var(--border-line);
-    color: var(--text-body);
-    font-size: 11px;
-    padding: 4px 12px;
-    border-radius: 20px;
+.menu-burger-btn {
+    background: var(--border-color);
+    border: none; 
+    color: white;
+    padding: 8px 14px; 
+    border-radius: 6px; 
     cursor: pointer;
-    transition: 0.15s ease;
+    font-weight: 600;
 }
-.filter-tag:hover, .filter-tag.active {
-    background: var(--f1-red);
-    border-color: var(--f1-red);
-    color: #fff;
+.menu-burger-btn:hover { background: #3f3f46; }
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(225, 6, 0, 0.7); }
+    70% { box-shadow: 0 0 0 6px rgba(225, 6, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(225, 6, 0, 0); }
 }
-.rss-source-link {
-    text-decoration: none;
-    margin-right: 2px;
-    opacity: 0.4;
+
+.live-badge { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 14px; }
+.live-badge .dot { width: 10px; height: 10px; background-color: var(--accent-red); border-radius: 50%; animation: pulse 2s infinite; }
+
+.main-logo { font-size: 18px; font-weight: 900; }
+.main-logo span { color: var(--accent-red); }
+
+.mode-selectors { display: flex; gap: 5px; margin-left: auto; }
+.mode-btn { background: #18181b; border: 1px solid var(--border-color); color: var(--text-muted); padding: 6px 16px; cursor: pointer; border-radius: 4px; }
+.mode-btn.active { background: var(--accent-red); color: white; border-color: var(--accent-red); }
+
+.active-gp-badge { background: #18181b; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 4px; font-size: 13px; font-weight: bold; color: var(--f1-yellow); }
+
+/* ================= БОКОВАЯ ПАНЕЛЬ ================= */
+.pitwall-sidebar {
+    position: fixed; top: 0; left: -350px; width: 320px; height: 100vh;
+    background: rgba(18, 18, 20, 0.98); backdrop-filter: blur(10px);
+    z-index: 999; transition: left 0.3s; border-right: 1px solid var(--border-color); 
+    padding: 20px; box-sizing: border-box; overflow-y: auto;
 }
-.rss-source-link:hover { opacity: 1; }
+.pitwall-sidebar.open { left: 0; }
+.sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.sidebar-header h3 { margin: 0; font-size: 16px; }
+.close-btn { background: none; border: none; color: var(--text-muted); font-size: 28px; cursor: pointer; }
+
+.sidebar-section h4 { color: var(--text-muted); font-size: 12px; margin: 0 0 12px 0; }
+.sidebar-section input, .sidebar-section select { width: 100%; background: #000; border: 1px solid var(--border-color); color: white; padding: 10px; margin-top: 5px; border-radius: 4px; box-sizing: border-box; }
+.radio-group label { display: block; margin-bottom: 8px; font-size: 14px; }
+
+.action-btn-green { width: 100%; background: var(--f1-green); color: black; font-weight: bold; padding: 10px; border: none; border-radius: 4px; margin-top: 10px; cursor: pointer; }
+.action-btn-red { width: 100%; background: var(--accent-red); color: white; font-weight: bold; padding: 10px; border: none; border-radius: 4px; margin-top: 10px; cursor: pointer; }
+.action-btn-blue { width: 100%; background: var(--f1-blue); color: white; font-weight: bold; padding: 10px; border: none; border-radius: 4px; margin-top: 10px; cursor: pointer; }
+.action-btn-sub { width: 100%; background: var(--border-color); color: white; font-size: 12px; padding: 10px; border: none; border-radius: 4px; margin-top: 10px; cursor: pointer; }
+
+#admin-logs-view { background: #000; font-family: monospace; font-size: 11px; height: 180px; overflow-y: auto; padding: 8px; border: 1px solid var(--border-color); margin-top: 8px; }
+
+/* ================= РАБОЧАЯ ЗОНА ================= */
+.race-notices-bar { background: #18181b; display: flex; gap: 15px; padding: 10px 20px; overflow-x: auto; border-bottom: 1px solid var(--border-color); }
+.notice-item { padding: 6px 12px; border-radius: 4px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.n-time { font-weight: normal; opacity: 0.8; margin-right: 5px; }
+
+.notice-item.type-green { background: rgba(34, 197, 94, 0.15); color: var(--f1-green); border: 1px solid var(--f1-green); }
+.notice-item.type-yellow { background: rgba(234, 179, 8, 0.15); color: var(--f1-yellow); border: 1px solid var(--f1-yellow); }
+.notice-item.type-red { background: rgba(225, 6, 0, 0.15); color: #ff4545; border: 1px solid var(--accent-red); }
+.notice-item.type-white { background: var(--border-color); color: white; border: 1px solid #3f3f46; }
+
+.video-section { position: relative; background: #000; border-bottom: 1px solid var(--border-color); }
+.video-section video { width: 100%; max-height: 65vh; object-fit: contain; }
+.stream-info-overlay { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.8); padding: 6px 12px; font-size: 12px; font-weight: bold; border-left: 3px solid var(--accent-red); border-radius: 0 4px 4px 0; }
+
+/* Карточки пилотов */
+.podium-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 20px; }
+.driver-card { background: var(--bg-panel); border-radius: 6px; padding: 15px; display: flex; align-items: center; border: 1px solid var(--border-color); border-left: 5px solid #3f3f46; }
+.driver-card .rank { font-size: 28px; font-weight: 900; color: #fff; width: 30px; }
+.driver-card .meta { display: flex; flex-direction: column; margin-left: 15px; flex-grow: 1; }
+.driver-card .name { font-weight: 800; font-size: 18px; }
+.driver-card .team-name { font-size: 12px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
+.driver-card .num { font-size: 14px; font-weight: bold; color: var(--text-muted); }
+
+/* PRO Режим */
+.workspace.mode-pro-active .pro-only { display: grid; }
+.workspace.mode-pro-active .spectator-only { display: none; }
+.workspace:not(.mode-pro-active) .pro-only { display: none; }
+
+/* Хайлайты и Новости */
+.highlights-section, .news-section { padding: 10px 20px 30px 20px; }
+.highlights-section h3, .news-section h3 { font-size: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+.hl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+.hl-card { background: var(--bg-panel); border: 1px solid var(--border-color); padding: 15px; border-radius: 6px; cursor: pointer; }
+.news-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 15px; }
+.news-item { background: var(--bg-panel); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); border-left: 4px solid var(--border-color); }
+
+@media (max-width: 900px) {
+    .top-bar { flex-wrap: wrap; height: auto; padding: 10px; }
+    .mode-selectors { width: 100%; justify-content: center; }
+    .podium-row, .news-list, .hl-grid { grid-template-columns: 1fr; }
+   }
