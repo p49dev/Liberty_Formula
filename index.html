@@ -3,121 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LIBERTY FORMULA // COMMAND CENTER</title>
+    <title>Liberty Formula | Command Center</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <header class="top-bar">
-        <button class="menu-burger-btn" onclick="togglePitwallControl()">☰ Pitwall</button>
+        <button class="menu-burger-btn" onclick="togglePitwallControl()">≡ PITWALL</button>
         <div class="live-badge"><span class="dot"></span> LIVE</div>
-        <div class="main-logo">LIBERTY <span>FORMULA</span></div>
+        <div class="main-logo">LIBERTY<span>FORMULA</span></div>
+        <div class="active-gp-badge" id="current-gp-display">ОЖИДАНИЕ ДАННЫХ...</div>
+        
         <div class="mode-selectors">
-            <button id="btn-spectator" class="mode-btn active" onclick="setMode('spectator')">Spectator</button>
-            <button id="btn-pro" class="mode-btn" onclick="setMode('pro')">Pro Pitwall</button>
+            <button id="btn-spectator" class="mode-btn active" onclick="setMode('spectator')">SPECTATOR</button>
+            <button id="btn-pro" class="mode-btn" onclick="setMode('pro')">PRO PITWALL</button>
         </div>
-        <div class="active-gp-badge" id="current-gp-display">LOADING GP...</div>
     </header>
 
-    <aside class="pitwall-sidebar" id="pitwall-sidebar">
+    <aside id="pitwall-sidebar" class="pitwall-sidebar">
         <div class="sidebar-header">
-            <h3>PITWALL MANAGEMENT</h3>
+            <h3>RACE CONTROL</h3>
             <button class="close-btn" onclick="togglePitwallControl()">×</button>
         </div>
 
         <div class="sidebar-section">
-            <h4>🎙️ ПУЛЬТ КОММЕНТАТОРА</h4>
-            <label>Аудио-дорожка:</label>
+            <h4>КОММЕНТАТОРСКАЯ</h4>
             <div class="radio-group">
-                <label><input type="radio" name="audio-feed" value="P4/9 LIVE" checked> P4/9 LIVE</label><br>
-                <label><input type="radio" name="audio-feed" value="RedRace Stream"> RedRace Стрим</label><br>
-                <label><input type="radio" name="audio-feed" value="FX Motors"> FX Моторы (Интершум)</label>
+                <label><input type="radio" name="audio-feed" value="ru_main" checked> RU (Основная)</label>
+                <label><input type="radio" name="audio-feed" value="ru_alt"> RU (Альтернативная)</label>
+                <label><input type="radio" name="audio-feed" value="en_sky"> EN (Sky Sports)</label>
             </div>
-
-            <label style="margin-top:12px; display:block;">Калибровка звука (задержка):</label>
-            <input type="range" id="delay-input-range" min="0" max="5" step="0.1" value="0" oninput="document.getElementById('delay-val').innerText = this.value + 'с'">
-            <span id="delay-val" style="font-size:12px; color:var(--accent-red)">0с</span>
+            <h4 style="margin-top: 15px;">ЗАДЕРЖКА АУДИО (СЕК)</h4>
+            <input type="range" id="delay-input-range" min="-10" max="10" step="0.5" value="0" style="width: 100%;">
             
-            <label style="margin-top:12px; display:block;">Сообщение Race Control:</label>
-            <input type="text" id="commentator-notice-text" placeholder="Например: Авария в 3 секторе...">
+            <h4 style="margin-top: 15px;">ОПЕРАТИВНАЯ ПЛАШКА</h4>
+            <input type="text" id="commentator-notice-text" placeholder="Текст сообщения...">
             <select id="commentator-notice-type">
-                <option value="white">Белый (Инфо)</option>
-                <option value="yellow">Желтый (Флаг/Инцидент)</option>
-                <option value="red">Красный (Остановка гонки)</option>
-                <option value="green">Зеленый (Трэк чист)</option>
+                <option value="white">Обычная (Белая)</option>
+                <option value="yellow">Желтые флаги (Желтая)</option>
+                <option value="green">Зеленый флаг (Зеленая)</option>
+                <option value="red">Красный флаг (Красная)</option>
             </select>
-            <button class="action-btn-green" onclick="commentatorPushChanges()">Обновить параметры эфира</button>
+            <button class="action-btn-blue" onclick="commentatorPushChanges()">ОТПРАВИТЬ В ЭФИР</button>
         </div>
 
-        <hr style="border-color: #27272a; margin: 15px 0;">
+        <hr style="border-color: var(--border-color); margin: 20px 0;">
 
         <div class="sidebar-section">
-            <h4>👑 ЗОНА АДМИНИСТРАТОРА (KIMI ONLY)</h4>
+            <h4>ДОСТУП АДМИНИСТРАТОРА</h4>
             <div id="admin-auth-fields">
                 <input type="text" id="admin-login-input" placeholder="Логин (Kimi)">
                 <input type="password" id="admin-pass-input" placeholder="Пароль">
-                <button class="action-btn-red" onclick="unlockAdminZone()">Войти в Систему</button>
+                <button class="action-btn-red" onclick="unlockAdminZone()">АВТОРИЗАЦИЯ</button>
             </div>
-            
+
             <div id="admin-core-controls" style="display: none;">
-                <p style="color: #22c55e; font-size:12px; margin:0 0 10px 0;">✓ Доступ подтвержден, Kimi</p>
-                <button class="action-btn-blue" onclick="adminPushConfig()">⚙ Конфигурация Ядра</button>
-                
-                <h5 style="margin: 15px 0 5px 0; color: var(--text-muted);">ЛОГИ СЕРВЕРА RAILWAY:</h5>
-                <div id="admin-logs-view">Загрузка логов...</div>
-                <button class="action-btn-sub" onclick="refreshAdminLogs()" style="margin-top:5px;">🔄 Обновить Логи</button>
+                <button class="action-btn-green" onclick="adminPushConfig()">СМЕНИТЬ ГРАН-ПРИ</button>
+                <button class="action-btn-sub" onclick="refreshAdminLogs()">ОБНОВИТЬ ЛОГИ ЯДРА</button>
+                <div id="admin-logs-view">Ожидание логов сервера...</div>
             </div>
         </div>
     </aside>
 
-    <main class="workspace" id="workspace-container">
+    <main id="workspace-container" class="workspace">
         
-        <section class="race-notices-bar" id="notices-marquee-container">
-            </section>
+        <div class="race-notices-bar" id="notices-marquee-container">
+            </div>
 
         <section class="video-section">
-            <video id="f1-player" controls autoplay muted poster="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=1200"></video>
-            <div class="stream-info-overlay">
-                <span class="lbl">СТАТУС:</span> <span id="provider-name" class="val">ПОИСК СТРИМА...</span>
-            </div>
+            <div class="stream-info-overlay">ИСТОЧНИК: <span id="provider-name" class="lbl">ОЖИДАНИЕ</span></div>
+            <video id="f1-player" controls autoplay muted style="background: #000;"></video>
         </section>
 
-        <section class="podium-row spectator-only">
-            <div class="driver-card p1">
-                <div class="rank">1</div>
-                <div class="meta"><span class="name">VER</span><span class="gap">ЛИДЕР</span></div>
-                <div class="tyre-indicator"><span class="t-badge s">S</span></div>
-            </div>
-            <div class="driver-card p2">
-                <div class="rank">2</div>
-                <div class="meta"><span class="name">LEC</span><span class="gap">+1.240</span></div>
-                <div class="tyre-indicator"><span class="t-badge m">M</span></div>
-            </div>
-            <div class="driver-card p3">
-                <div class="rank">3</div>
-                <div class="meta"><span class="name">NOR</span><span class="gap">+3.891</span></div>
-                <div class="tyre-indicator"><span class="t-badge m">M</span></div>
-            </div>
-        </section>
+        <section class="podium-row pro-only" id="live-podium-container">
+            </section>
 
-        <section class="pro-only table-section">
-            <div style="background:var(--bg-panel); padding:15px; border-radius:6px; border:1px solid #27272a;">
-                <h4>LIVE TELEMETRY // SECTOR ANALYSIS</h4>
-                <p style="color:var(--text-muted); font-size:13px;">[Модуль DPE активен. Идет калибровка таймингов секторов S1/S2/S3...]</p>
-            </div>
-        </section>
-
-        <section class="highlights-section">
-            <h3>АРХИВ ЛУЧШИХ МОМЕНТОВ ЭТАПОВ</h3>
-            <div class="hl-grid" id="highlights-container"></div>
+        <section class="highlights-section spectator-only">
+            <h3>АРХИВ ТРАНСЛЯЦИЙ И ХАЙЛАЙТЫ</h3>
+            <div class="hl-grid" id="highlights-container">
+                </div>
         </section>
 
         <section class="news-section">
-            <h3>REDRACE HUB // НОВОСТНАЯ ЛЕНТА RSS</h3>
-            <div class="news-list" id="news-container"></div>
+            <h3>ЛЕНТА НОВОСТЕЙ F1</h3>
+            <div class="news-list" id="news-container">
+                </div>
         </section>
+
     </main>
 
     <script src="main.js"></script>
 </body>
-    </html>
+</html>
