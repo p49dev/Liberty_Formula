@@ -1,322 +1,140 @@
-/**
- * LIBERTY FORMULA — CORE FRONTEND CONSOLE
- * URL Бэкенда: https://libertyformula-production-4740.up.railway.app
- * Порт 8080 проксируется автоматически через HTTPS
- */
-
 const API_BASE = "https://libertyformula-production-4740.up.railway.app";
 let adminCredentialsBase64 = "";
 
 /**
- * Переключение режимов интерфейса (Spectator vs Pro Pitwall)
+ * БАЗА F1 2026: КОМАНДЫ, ПИЛОТЫ И КЛАССЫ ЦВЕТОВ
  */
+const F1_GRID_2026 = {
+    "MERCEDES": { colorClass: "border-mercedes", drivers: [{ id: "ANT", name: "Kimi Antonelli", num: 12 }, { id: "RUS", name: "George Russell", num: 63 }] },
+    "FERRARI": { colorClass: "border-ferrari", drivers: [{ id: "HAM", name: "Lewis Hamilton", num: 44 }, { id: "LEC", name: "Charles Leclerc", num: 16 }] },
+    "MCLAREN": { colorClass: "border-mclaren", drivers: [{ id: "NOR", name: "Lando Norris", num: 1 }, { id: "PIA", name: "Oscar Piastri", num: 81 }] },
+    "RED_BULL": { colorClass: "border-redbull", drivers: [{ id: "VER", name: "Max Verstappen", num: 3 }, { id: "HAD", name: "Isack Hadjar", num: 6 }] },
+    "ASTON_MARTIN": { colorClass: "border-aston", drivers: [{ id: "ALO", name: "Fernando Alonso", num: 14 }, { id: "STR", name: "Lance Stroll", num: 18 }] },
+    "ALPINE": { colorClass: "border-alpine", drivers: [{ id: "GAS", name: "Pierre Gasly", num: 10 }, { id: "COL", name: "Franco Colapinto", num: 43 }] },
+    "WILLIAMS": { colorClass: "border-williams", drivers: [{ id: "SAI", name: "Carlos Sainz", num: 55 }, { id: "ALB", name: "Alex Albon", num: 23 }] },
+    "RACING_BULLS": { colorClass: "border-racingbulls", drivers: [{ id: "LAW", name: "Liam Lawson", num: 30 }, { id: "LIN", name: "Arvid Lindblad", num: 41 }] },
+    "HAAS": { colorClass: "border-haas", drivers: [{ id: "OCO", name: "Esteban Ocon", num: 31 }, { id: "BEA", name: "Oliver Bearman", num: 87 }] },
+    "AUDI": { colorClass: "border-audi", drivers: [{ id: "BOR", name: "Gabriel Bortoleto", num: 5 }, { id: "HUL", name: "Nico Hülkenberg", num: 27 }] },
+    "CADILLAC": { colorClass: "border-cadillac", drivers: [{ id: "PER", name: "Sergio Pérez", num: 11 }, { id: "BOT", name: "Valtteri Bottas", num: 77 }] }
+};
+
+// Функция поиска пилота по ID для сборки инфографики
+function getDriverInfo(driverId) {
+    for (const [teamName, teamData] of Object.entries(F1_GRID_2026)) {
+        const driver = teamData.drivers.find(d => d.id === driverId);
+        if (driver) return { ...driver, team: teamName.replace("_", " "), colorClass: teamData.colorClass };
+    }
+    return { name: "Unknown Driver", num: 0, team: "FIA", colorClass: "" };
+}
+
+// Переключение режимов
 function setMode(mode) {
     const workspace = document.getElementById('workspace-container');
     const btnSpectator = document.getElementById('btn-spectator');
     const btnPro = document.getElementById('btn-pro');
 
-    if (!workspace || !btnSpectator || !btnPro) return;
-
     if (mode === 'pro') {
         workspace.classList.add('mode-pro-active');
         btnPro.classList.add('active');
         btnSpectator.classList.remove('active');
-        console.log("Режим: Pro Pitwall активирован");
+        renderMockPodium(); // Отрисовываем подиум при входе в PRO режим
     } else {
         workspace.classList.remove('mode-pro-active');
         btnSpectator.classList.add('active');
         btnPro.classList.remove('active');
-        console.log("Режим: Spectator активирован");
     }
 }
 
-/**
- * Переключение видимости боковой панели управления
- */
 function togglePitwallControl() {
-    const sidebar = document.getElementById('pitwall-sidebar');
-    if (sidebar) {
-        sidebar.classList.toggle('open');
-    }
+    document.getElementById('pitwall-sidebar').classList.toggle('open');
 }
 
-/**
- * Загрузка текущего состояния гонки и вывод плашек Race Control Notices
- */
+// Загрузка состояния (Race Control)
 async function loadCurrentState() {
     try {
         const res = await fetch(`${API_BASE}/api/state.json`);
-        if (!res.ok) throw new Error("Ошибка чтения состояния ядра");
+        if (!res.ok) throw new Error("Ошибка чтения");
         const state = await res.json();
         
-        // Обновление плашки активного Гран-при в шапке
-        const gpDisplay = document.getElementById('current-gp-display');
-        if (gpDisplay) {
-            gpDisplay.innerText = state.current_gp.toUpperCase();
-        }
+        document.getElementById('current-gp-display').innerText = state.current_gp ? state.current_gp.toUpperCase() : "STANDBY";
         
-        // Рендеринг оперативных плашек Race Control
         const noticesContainer = document.getElementById('notices-marquee-container');
-        if (noticesContainer) {
-            if (state.race_control_notices && state.race_control_notices.length > 0) {
-                noticesContainer.innerHTML = state.race_control_notices.map(n => `
-                    <div class="notice-item type-${n.type}">
-                        <span class="n-time">[${n.time}]</span> ${n.text}
-                    </div>
-                `).join('');
-            } else {
-                noticesContainer.innerHTML = "<div style='color:#71717a; font-size:12px; padding:4px;'>RACE CONTROL: NO LIVE NOTICES</div>";
-            }
+        if (state.race_control_notices && state.race_control_notices.length > 0) {
+            noticesContainer.innerHTML = state.race_control_notices.map(n => `
+                <div class="notice-item type-${n.type}"><span class="n-time">[${n.time}]</span> ${n.text}</div>
+            `).join('');
+        } else {
+            noticesContainer.innerHTML = "<div style='color:#71717a;'>RACE CONTROL: NO LIVE NOTICES</div>";
         }
     } catch (e) {
-        console.error("Не удалось синхронизировать состояние с Railway:", e);
+        console.error("Нет связи с бэкендом Railway:", e);
     }
 }
 
-/**
- * Инициализация основного видеопотока (.m3u8 HLS) через прокси-ротатор бэкенда
- */
+// Отрисовка подиума с применением цветов 2026 года
+function renderMockPodium() {
+    const container = document.getElementById('live-podium-container');
+    // Заглушка: симулируем топ-3 пилотов (например, Норрис, Хэмилтон, Антонелли)
+    const top3 = ["NOR", "HAM", "ANT"]; 
+    
+    container.innerHTML = top3.map((driverId, index) => {
+        const d = getDriverInfo(driverId);
+        return `
+            <div class="driver-card ${d.colorClass}">
+                <div class="rank">P${index + 1}</div>
+                <div class="meta">
+                    <div class="name">${d.name}</div>
+                    <div class="team-name">${d.team}</div>
+                </div>
+                <div class="num">${d.num}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Инициализация плеера
 async function initStream() {
     const video = document.getElementById('f1-player');
     const providerDisplay = document.getElementById('provider-name');
-    
-    if (!providerDisplay) return;
-    
     try {
         const res = await fetch(`${API_BASE}/api/stream.json`);
-        if (!res.ok) throw new Error("Поток недоступен");
         const data = await res.json();
-        
         if (video && data.m3u8) {
-            providerDisplay.innerText = data.provider ? data.provider.toUpperCase() : "LIVE ПОТОК АКТИВЕН";
+            providerDisplay.innerText = data.provider || "LIVE";
             video.src = data.m3u8;
-        } else {
-            providerDisplay.innerText = "РЕЗЕРВНЫЙ СИМУЛЯТОР СЕТИ";
         }
     } catch (e) {
-        console.error("Ошибка подключения к видеопотоку:", e);
-        providerDisplay.innerText = "БЭКЕНД ОФФЛАЙН / GEO-BLOCK";
+        providerDisplay.innerText = "БЭКЕНД ОФФЛАЙН";
     }
 }
 
-/**
- * ПУЛЬТ КОММЕНТАТОРА: Смена аудиодорожки, задержки и отправка плашек (БЕЗ ПАРОЛЯ)
- */
+// Пульт комментатора
 async function commentatorPushChanges() {
-    const audioRadio = document.querySelector('input[name="audio-feed"]:checked');
-    const delayInput = document.getElementById('delay-input-range');
-    const noticeTextInput = document.getElementById('commentator-notice-text');
-    const noticeTypeSelect = document.getElementById('commentator-notice-type');
-
-    if (!audioRadio || !delayInput) return alert("Элементы управления пультом не найдены!");
-
-    const selectedAudio = audioRadio.value;
-    const delayVal = parseFloat(delayInput.value);
-    const noticeText = noticeTextInput ? noticeTextInput.value.trim() : "";
-    const noticeType = noticeTypeSelect ? noticeTypeSelect.value : "white";
-
+    const text = document.getElementById('commentator-notice-text').value;
+    const type = document.getElementById('commentator-notice-type').value;
     try {
-        const res = await fetch(`${API_BASE}/api/commentator/update`, {
+        await fetch(`${API_BASE}/api/commentator/update`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                active_audio_feed: selectedAudio,
-                audio_delay: delayVal,
-                new_notice_text: noticeText || null,
-                new_notice_type: noticeType
-            })
+            body: JSON.stringify({ new_notice_text: text, new_notice_type: type })
         });
-
-        if (res.ok) {
-            alert("Параметры трансляции успешно применились к эфиру!");
-            if (noticeTextInput) noticeTextInput.value = ""; // Очищаем поле ввода сообщения
-            loadCurrentState(); // Моментально обновляем бегущую строку у себя
-        } else {
-            alert("Сервер отклонил запрос комментатора.");
-        }
-    } catch (e) {
-        console.error("Ошибка пуша комментатора:", e);
-        alert("Ошибка связи с сервером Railway при обновлении эфира.");
-    }
+        alert("Отправлено в эфир!");
+        loadCurrentState();
+    } catch (e) { alert("Ошибка пуша"); }
 }
 
-/**
- * АДМИН-ЗОНА: Авторизация администратора Kimi в боковой панели
- */
+// Админка
 async function unlockAdminZone() {
-    const userField = document.getElementById('admin-login-input');
-    const passField = document.getElementById('admin-pass-input');
-    
-    if (!userField || !passField) return;
-
-    const user = userField.value.trim();
-    const pass = passField.value.trim();
-    
-    if (!user || !pass) return alert("Введите имя пользователя и пароль!");
-
-    // Безопасное кодирование токена авторизации с поддержкой спецсимволов
+    const user = document.getElementById('admin-login-input').value;
+    const pass = document.getElementById('admin-pass-input').value;
     adminCredentialsBase64 = 'Basic ' + btoa(unescape(encodeURIComponent(user + ':' + pass)));
-
-    try {
-        // Проверяем подлинность токена через запрос защищенных системных логов
-        const response = await fetch(`${API_BASE}/api/admin/logs`, {
-            headers: { 'Authorization': adminCredentialsBase64 }
-        });
-
-        if (response.status === 200) {
-            // Переключаем блоки интерфейса: скрываем форму входа, показываем пульт Kimi
-            document.getElementById('admin-auth-fields').style.display = 'none';
-            document.getElementById('admin-core-controls').style.display = 'block';
-            
-            const logData = await response.json();
-            renderLogs(logData);
-        } else {
-            alert("Доступ заблокирован: Неверный токен администратора Kimi!");
-            adminCredentialsBase64 = "";
-        }
-    } catch (e) {
-        console.error("Ошибка шлюза авторизации:", e);
-        alert("Не удалось связаться с сервером для проверки пароля.");
-        adminCredentialsBase64 = "";
-    }
+    document.getElementById('admin-auth-fields').style.display = 'none';
+    document.getElementById('admin-core-controls').style.display = 'block';
 }
 
-/**
- * АДМИН-ЗОНА: Запрос свежих логов с Railway сервера
- */
-async function refreshAdminLogs() {
-    if (!adminCredentialsBase64) return;
-    try {
-        const response = await fetch(`${API_BASE}/api/admin/logs`, {
-            headers: { 'Authorization': adminCredentialsBase64 }
-        });
-        if (response.ok) {
-            const logData = await response.json();
-            renderLogs(logData);
-        }
-    } catch (e) {
-        console.error("Ошибка обновления логов:", e);
-    }
-}
-
-/**
- * Отрисовка полученных строк логов в консоль панели управления
- */
-function renderLogs(data) {
-    const container = document.getElementById('admin-logs-view');
-    if (!container) return;
-    
-    if (data.logs && data.logs.length > 0) {
-        container.innerHTML = data.logs.map(line => `
-            <div style="border-bottom:1px solid #18181b; padding:2px 0; color:#22c55e;">${line}</div>
-        `).join('');
-    } else {
-        container.innerHTML = "<div style='color:#71717a;'>Логи пусты</div>";
-    }
-    container.scrollTop = container.scrollHeight; // Авто-скролл вниз к свежим записям
-}
-
-/**
- * АДМИН-ЗОНА: Форсированная перезапись конфигурации ядра (Смена этапа / Ручной стрим)
- */
-async function adminPushConfig() {
-    if (!adminCredentialsBase64) return alert("Сессия администратора не активна!");
-
-    const newGP = prompt("Введите название нового активного Гран-При (например, Spanish GP):");
-    if (!newGP) return; // Отмена, если ничего не ввели
-
-    const nextStatus = prompt("Укажите статус этапа (LIVE NOW / NEXT / FINISHED):", "LIVE NOW");
-    const streamUrl = prompt("Прямая ссылка на поток .m3u8 (оставьте пустой для автоматических прокси):");
-
-    try {
-        const res = await fetch(`${API_BASE}/api/admin/update`, {
-            method: 'POST',
-            headers: {
-                'Authorization': adminCredentialsBase64,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                current_gp: newGP,
-                status_next: nextStatus || "LIVE NOW",
-                manual_stream_url: streamUrl || ""
-            })
-        });
-
-        if (res.ok) {
-            alert("Конфигурация ядра Liberty Formula успешно перезаписана!");
-            window.location.reload(); // Перезапуск для применения глобальных изменений
-        } else {
-            alert("Бэкенд отклонил конфигурацию. Проверьте права доступа.");
-        }
-    } catch (e) {
-        console.error("Сбой пуша конфигурации админа:", e);
-        alert("Критическая ошибка при отправке конфигурации на сервер.");
-    }
-}
-
-/**
- * Загрузка архива лучших моментов (Хайлайты прошлых гонок)
- */
-async function loadHighlights() {
-    const container = document.getElementById('highlights-container');
-    if (!container) return;
-
-    try {
-        const res = await fetch(`${API_BASE}/api/highlights.json`);
-        if (!res.ok) throw new Error("Архив недоступен");
-        const data = await res.json();
-        
-        container.innerHTML = data.highlights.map(hl => `
-            <div class="hl-card" onclick="document.getElementById('f1-player').src='${hl.url}'; document.getElementById('provider-name').innerText='АРХИВНЫЙ ПОВТОР';">
-                <div style="font-weight:bold; font-size:14px;">▶ ${hl.title}</div>
-                <div style="color:var(--text-muted); font-size:12px; margin-top:5px;">Длительность: ${hl.duration}</div>
-            </div>
-        `).join('');
-    } catch (e) {
-        console.error("Ошибка загрузки хайлайтов:", e);
-        container.innerHTML = "<div style='color:var(--text-muted); font-size:13px;'>Архив повторов временно недоступен</div>";
-    }
-}
-
-/**
- * Загрузка русских новостей F1News.ru и распределение по тегам безопасности
- */
-async function loadNewsFeed() {
-    const container = document.getElementById('news-container');
-    if (!container) return;
-
-    try {
-        const res = await fetch(`${API_BASE}/api/feed.json`);
-        if (!res.ok) throw new Error("Ошибка загрузки новостной ленты");
-        const data = await res.json();
-        
-        container.innerHTML = data.items.map(item => `
-            <div class="news-item item-${item.category}">
-                <div style="font-size:11px; color:var(--text-muted)">[${item.time}] // ${item.source}</div>
-                <a href="${item.link}" target="_blank" class="news-title" style="color:white; font-weight:bold; text-decoration:none; display:block; margin:5px 0;">${item.title}</a>
-                <p style="margin:0; font-size:13px; color:#d4d4d8">${item.description}</p>
-            </div>
-        `).join('');
-    } catch (e) {
-        console.error("Ошибка обновления ленты новостей:", e);
-        container.innerHTML = "<div style='color:var(--text-muted); font-size:13px;'>Не удалось загрузить свежие новости</div>";
-    }
-}
-
-/**
- * Инициализация приложения при полной отрисовке DOM-дерева
- */
 window.addEventListener('DOMContentLoaded', () => {
-    // Установка стартового режима просмотра по умолчанию
     setMode('spectator');
-    
-    // Первичный сбор данных с сервера Railway
     loadCurrentState();
     initStream();
-    loadHighlights();
-    loadNewsFeed();
-    
-    // Автоматические интервалы обновлений
-    setInterval(loadNewsFeed, 120000);   // Лента новостей: раз в 2 минуты
-    setInterval(loadCurrentState, 10000); // Синхронизация плашек Race Control: каждые 10 секунд
+    setInterval(loadCurrentState, 10000);
 });
