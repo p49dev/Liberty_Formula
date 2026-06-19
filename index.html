@@ -3,342 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liberty Formula // Pit Wall Control</title>
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&family=Archivo+Black&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4.0">
+    <title>LIBERTY FORMULA // COMMAND CENTER</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="sidebar" id="main-sidebar">
-        <div class="sidebar-header">
-            <h3>PITWALL CONTROL</h3>
-            <button class="close-menu-btn" onclick="toggleMenu()">×</button>
-        </div>
-        <div class="sidebar-section">
-            <h4>КАЛЕНДАРЬ ГРАН-ПРИ 2026</h4>
-            <a href="#" class="sidebar-link active" data-flag="🇧🇭" data-gp="Bahrain GP">🇧🇭 Bahrain GP</a>
-            <a href="#" class="sidebar-link" data-flag="🇪🇸" data-gp="Spanish GP">🇪🇸 Spanish GP <span class="badge-coming">NEXT</span></a>
-            <a href="#" class="sidebar-link" data-flag="🇲🇨" data-gp="Monaco GP">🇲🇨 Monaco GP</a>
-            <a href="#" class="sidebar-link" data-flag="🇮🇹" data-gp="Monza GP">🇮🇹 Monza GP</a>
-        </div>
-        <div class="sidebar-section">
-            <h4>ДИАГНОСТИКА СЕРВЕРА</h4>
-            <a href="https://libertyformula-production-4740.up.railway.app/api/feed.json" target="_blank" class="sidebar-link">🔌 Проверить Railway Feed</a>
-            <a href="https://libertyformula-production-4740.up.railway.app/api/stream.json" target="_blank" class="sidebar-link">📺 Проверить Stream API</a>
-        </div>
-        <div class="sidebar-footer">
-            <span>Core v4.0 // P4/9 & RedRace Engine</span>
-        </div>
-    </div>
-
     <header class="top-bar">
-        <div class="brand-section">
-            <button class="menu-toggle-btn" onclick="toggleMenu()">
-                <span></span><span></span><span></span>
-            </button>
-            <span class="live-indicator"><span class="live-dot"></span>LIVE</span>
-            <h1 class="logo-text">LIBERTY <span>FORMULA</span></h1>
+        <button class="menu-burger-btn" onclick="togglePitwallControl()">☰ Pitwall</button>
+        <div class="live-badge"><span class="dot"></span> LIVE</div>
+        <div class="main-logo">LIBERTY <span>FORMULA</span></div>
+        <div class="mode-selectors">
+            <button id="btn-spectator" class="mode-btn active" onclick="setMode('spectator')">Spectator</button>
+            <button id="btn-pro" class="mode-btn" onclick="setMode('pro')">Pro Pitwall</button>
         </div>
-
-        <div class="controls-hub">
-            <div class="mode-selector">
-                <button class="mode-btn active" id="btn-spectator" onclick="setMode('spectator')">Spectator</button>
-                <button class="mode-btn" id="btn-pro" onclick="setMode('pro')">Pro PitWall</button>
-            </div>
-            <div class="session-badge">
-                <span class="flag-dot">🇧🇭</span> BAHRAIN GP
-            </div>
-        </div>
+        <div class="active-gp-badge" id="current-gp-display">LOADING GP...</div>
     </header>
 
-    <main class="workspace-grid" id="workspace">
-        
-        <div class="left-column">
+    <aside class="pitwall-sidebar" id="pitwall-sidebar">
+        <div class="sidebar-header">
+            <h3>PITWALL MANAGEMENT</h3>
+            <button class="close-btn" onclick="togglePitwallControl()">×</button>
+        </div>
+
+        <div class="sidebar-section">
+            <h4>🎙️ ПУЛЬТ КОММЕНТАТОРА</h4>
+            <label>Аудио-дорожка:</label>
+            <div class="radio-group">
+                <label><input type="radio" name="audio-feed" value="P4/9 LIVE" checked> P4/9 LIVE</label><br>
+                <label><input type="radio" name="audio-feed" value="RedRace Stream"> RedRace Стрим</label><br>
+                <label><input type="radio" name="audio-feed" value="FX Motors"> FX Моторы (Интершум)</label>
+            </div>
+
+            <label style="margin-top:12px; display:block;">Калибровка звука (задержка):</label>
+            <input type="range" id="delay-input-range" min="0" max="5" step="0.1" value="0" oninput="document.getElementById('delay-val').innerText = this.value + 'с'">
+            <span id="delay-val" style="font-size:12px; color:var(--accent-red)">0с</span>
             
-            <div class="video-panel">
-                <div class="video-ratio-box">
-                    <div class="video-stream-placeholder">
-                        <div class="spinner"></div>
-                        <span>ЗАПУСК ПОТОКА STREAMLINK ЧЕРЕЗ RAILWAY PROXY...</span>
-                    </div>
-                    <div class="video-hud-corner">
-                        <span class="hud-pos">P1</span>
-                        <span class="hud-driver">VERSTAPPEN</span>
-                    </div>
-                </div>
+            <label style="margin-top:12px; display:block;">Сообщение Race Control:</label>
+            <input type="text" id="commentator-notice-text" placeholder="Например: Авария в 3 секторе...">
+            <select id="commentator-notice-type">
+                <option value="white">Белый (Инфо)</option>
+                <option value="yellow">Желтый (Флаг/Инцидент)</option>
+                <option value="red">Красный (Остановка гонки)</option>
+                <option value="green">Зеленый (Трэк чист)</option>
+            </select>
+            <button class="action-btn-green" onclick="commentatorPushChanges()">Обновить параметры эфира</button>
+        </div>
+
+        <hr style="border-color: #27272a; margin: 15px 0;">
+
+        <div class="sidebar-section">
+            <h4>👑 ЗОНА АДМИНИСТРАТОРА (KIMI ONLY)</h4>
+            <div id="admin-auth-fields">
+                <input type="text" id="admin-login-input" placeholder="Логин (Kimi)">
+                <input type="password" id="admin-pass-input" placeholder="Пароль">
+                <button class="action-btn-red" onclick="unlockAdminZone()">Войти в Систему</button>
+            </div>
+            
+            <div id="admin-core-controls" style="display: none;">
+                <p style="color: #22c55e; font-size:12px; margin:0 0 10px 0;">✓ Доступ подтвержден, Kimi</p>
+                <button class="action-btn-blue" onclick="adminPushConfig()">⚙ Конфигурация Ядра</button>
                 
-                <div class="rtbf-control-bar">
-                    <div class="rtbf-status">
-                        <span class="status-pulse-green" id="stream-status-dot"></span>
-                        <span class="rtbf-label">ИСТОЧНИК: <b id="stream-source-text">RTBF AUVIO (BE)</b></span>
-                    </div>
-                    <div class="rtbf-actions">
-                        <div class="audio-sync-box">
-                            <label for="audio-delay">Синхронизация звука:</label>
-                            <input type="range" id="audio-delay" min="-5" max="5" step="0.5" value="0" oninput="updateAudioDelay(this.value)">
-                            <span id="delay-val">0.0s</span>
-                        </div>
-                        <select class="rtbf-select" id="stream-quality">
-                            <option value="1080p">1080p [60fps]</option>
-                            <option value="720p" selected>720p [Auto]</option>
-                            <option value="480p">480p [Mobile]</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="podium-strip spectator-only">
-                <div class="podium-cell p1 clr-redbull">
-                    <span class="podium-pos digits">1</span>
-                    <span class="team-stripe"></span>
-                    <span class="podium-driver">VER</span>
-                    <span class="podium-gap digits purple-text">LEADER</span>
-                </div>
-                <div class="podium-cell p2 clr-ferrari">
-                    <span class="podium-pos digits">2</span>
-                    <span class="team-stripe"></span>
-                    <span class="podium-driver">LEC</span>
-                    <span class="podium-gap digits">+3.420</span>
-                </div>
-                <div class="podium-cell p3 clr-mclaren">
-                    <span class="podium-pos digits">3</span>
-                    <span class="team-stripe"></span>
-                    <span class="podium-driver">NOR</span>
-                    <span class="podium-gap digits">+5.112</span>
-                </div>
-            </div>
-
-            <div class="table-scroller">
-                <table class="pitwall-table">
-                    <thead>
-                        <tr>
-                            <th class="center">POS</th>
-                            <th>DRIVER</th>
-                            <th>GAP</th>
-                            <th class="center">TYRE</th>
-                            <th class="pro-only right">S1</th>
-                            <th class="pro-only right">S2</th>
-                            <th class="pro-only right">S3</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body">
-                        <tr class="clr-redbull">
-                            <td class="pos digits">1</td>
-                            <td class="driver"><span class="team-stripe"></span><b>VER</b></td>
-                            <td class="gap digits">LEADER</td>
-                            <td class="tyre center"><span class="tyre-badge m">M</span></td>
-                            <td class="pro-only digits right">28.114</td>
-                            <td class="pro-only digits right">38.441</td>
-                            <td class="pro-only digits right">22.905</td>
-                        </tr>
-                        <tr class="clr-ferrari">
-                            <td class="pos digits">2</td>
-                            <td class="driver"><span class="team-stripe"></span><b>LEC</b></td>
-                            <td class="gap digits">+3.420</td>
-                            <td class="tyre center"><span class="tyre-badge m">M</span></td>
-                            <td class="pro-only digits right">28.240</td>
-                            <td class="pro-only digits right">38.612</td>
-                            <td class="pro-only digits right">22.990</td>
-                        </tr>
-                        <tr class="clr-mclaren">
-                            <td class="pos digits">3</td>
-                            <td class="driver"><span class="team-stripe"></span><b>NOR</b></td>
-                            <td class="gap digits">+5.112</td>
-                            <td class="tyre center"><span class="tyre-badge s">S</span></td>
-                            <td class="pro-only digits right">28.095</td>
-                            <td class="pro-only digits right">38.901</td>
-                            <td class="pro-only digits right">23.102</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <h5 style="margin: 15px 0 5px 0; color: var(--text-muted);">ЛОГИ СЕРВЕРА RAILWAY:</h5>
+                <div id="admin-logs-view">Загрузка логов...</div>
+                <button class="action-btn-sub" onclick="refreshAdminLogs()" style="margin-top:5px;">🔄 Обновить Логи</button>
             </div>
         </div>
+    </aside>
 
-        <div class="hub-panel">
-            <div class="hub-header">
-                <h2>REDRACE HUB // RSS FEED</h2>
-                <div class="hub-filters">
-                    <button class="filter-tag active" onclick="filterRSS('all')">Все публикации</button>
-                    <button class="filter-tag" onclick="filterRSS('alert')">Срочно 🚨</button>
-                    <button class="filter-tag" onclick="filterRSS('tech')">Аналитика 📊</button>
-                </div>
-            </div>
-            <div class="hub-timeline" id="rss-container">
-                <div class="hub-row alert">
-                    <span class="hub-time text-red">LIVE</span>
-                    <div class="hub-body">
-                        <p class="hub-text"><span class="alert-highlight">[СИСТЕМА]</span> Подключение к вашей ноде на Railway FastAPI...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <main class="workspace" id="workspace-container">
+        
+        <section class="race-notices-bar" id="notices-marquee-container">
+            </section>
 
+        <section class="video-section">
+            <video id="f1-player" controls autoplay muted poster="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=1200"></video>
+            <div class="stream-info-overlay">
+                <span class="lbl">СТАТУС:</span> <span id="provider-name" class="val">ПОИСК СТРИМА...</span>
+            </div>
+        </section>
+
+        <section class="podium-row spectator-only">
+            <div class="driver-card p1">
+                <div class="rank">1</div>
+                <div class="meta"><span class="name">VER</span><span class="gap">ЛИДЕР</span></div>
+                <div class="tyre-indicator"><span class="t-badge s">S</span></div>
+            </div>
+            <div class="driver-card p2">
+                <div class="rank">2</div>
+                <div class="meta"><span class="name">LEC</span><span class="gap">+1.240</span></div>
+                <div class="tyre-indicator"><span class="t-badge m">M</span></div>
+            </div>
+            <div class="driver-card p3">
+                <div class="rank">3</div>
+                <div class="meta"><span class="name">NOR</span><span class="gap">+3.891</span></div>
+                <div class="tyre-indicator"><span class="t-badge m">M</span></div>
+            </div>
+        </section>
+
+        <section class="pro-only table-section">
+            <div style="background:var(--bg-panel); padding:15px; border-radius:6px; border:1px solid #27272a;">
+                <h4>LIVE TELEMETRY // SECTOR ANALYSIS</h4>
+                <p style="color:var(--text-muted); font-size:13px;">[Модуль DPE активен. Идет калибровка таймингов секторов S1/S2/S3...]</p>
+            </div>
+        </section>
+
+        <section class="highlights-section">
+            <h3>АРХИВ ЛУЧШИХ МОМЕНТОВ ЭТАПОВ</h3>
+            <div class="hl-grid" id="highlights-container"></div>
+        </section>
+
+        <section class="news-section">
+            <h3>REDRACE HUB // НОВОСТНАЯ ЛЕНТА RSS</h3>
+            <div class="news-list" id="news-container"></div>
+        </section>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.12/dist/hls.min.js"></script>
-    <script>
-        // АКТУАЛЬНЫЙ АДРЕС БЭКЕНДА RAILWAY
-        const BACKEND_URL = "https://libertyformula-production-4740.up.railway.app";
-        let currentQuality = "720p";
-        let cachedFeedItems = [];
-
-        // Переключатель режимов экрана
-        function setMode(mode) {
-            const ws = document.getElementById('workspace');
-            const btnSpec = document.getElementById('btn-spectator');
-            const btnPro = document.getElementById('btn-pro');
-            
-            if (mode === 'pro') {
-                ws.classList.add('mode-pro-active');
-                btnPro.classList.add('active');
-                btnSpec.classList.remove('active');
-            } else {
-                ws.classList.remove('mode-pro-active');
-                btnSpec.classList.add('active');
-                btnPro.classList.remove('active');
-            }
-        }
-
-        // Управление боковым меню (Sidebar)
-        function toggleMenu() {
-            document.getElementById('main-sidebar').classList.toggle('open');
-        }
-
-        // Клик по трассам в меню: меняет шапку
-        document.querySelectorAll('.sidebar-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                if (this.getAttribute('href') === '#') e.preventDefault();
-                document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
-                
-                const flag = this.getAttribute('data-flag');
-                const gpName = this.getAttribute('data-gp');
-                if(gpName) {
-                    document.querySelector('.session-badge').innerHTML = `<span class="flag-dot">${flag}</span> ${gpName.toUpperCase()}`;
-                    toggleMenu(); // закрываем меню после выбора
-                }
-            });
-        });
-
-        // Слайдер аудио-синхронизации (Интерактивный)
-        function updateAudioDelay(val) {
-            document.getElementById('delay-val').textContent = (val > 0 ? '+' : '') + val + 's';
-            console.log(`[СИНХРОНИЗАЦИЯ] Смещение аудиодорожки относительно видео-буфера: ${val} сек.`);
-        }
-
-        // Селектор качества (Отправляет запрос на бэк и перезапускает HLS поток)
-        document.getElementById('stream-quality').addEventListener('change', function(e) {
-            currentQuality = e.target.value;
-            console.log(`[STREAMLINK] Переключение профиля качества на: ${currentQuality}`);
-            loadStream();
-        });
-
-        // Фильтрация новостей на фронтенде
-        function filterRSS(category) {
-            document.querySelectorAll('.filter-tag').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            renderFeed(category);
-        }
-
-        // Отрисовка новостей в ленту
-        function renderFeed(filter = 'all') {
-            const container = document.getElementById('rss-container');
-            if (!cachedFeedItems.length) return;
-
-            const filtered = cachedFeedItems.filter(item => filter === 'all' || item.category === filter);
-            
-            if(filtered.length === 0) {
-                container.innerHTML = `<div class="hub-row"><span class="hub-time">—</span><div class="hub-body"><p class="hub-text">В данной категории нет активных новостей сессии.</p></div></div>`;
-                return;
-            }
-
-            container.innerHTML = filtered.map(item => `
-                <div class="hub-row ${item.category}">
-                    <span class="hub-time ${item.category === 'alert' ? 'text-red' : ''}">${item.time}</span>
-                    <div class="hub-body">
-                        <p class="hub-text">
-                            <a href="${item.link}" target="_blank" class="rss-source-link" title="Читать источник">🔗</a> 
-                            <b class="${item.category === 'alert' ? 'alert-highlight' : ''}">${item.title}</b> — ${item.description}
-                        </p>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Загрузка реального фида через FastAPI и feedparser
-        async function loadFeed() {
-            try {
-                const r = await fetch(`${BACKEND_URL}/api/feed.json`);
-                const data = await r.json();
-                if (data.items && data.items.length > 0) {
-                    cachedFeedItems = data.items;
-                    // Считываем активный фильтр
-                    const activeFilterBtn = document.querySelector('.filter-tag.active');
-                    const currentFilter = activeFilterBtn.innerText.includes('Срочно') ? 'alert' : activeFilterBtn.innerText.includes('Аналитика') ? 'tech' : 'all';
-                    renderFeed(currentFilter);
-                }
-            } catch (e) {
-                console.error("Сервер Railway не отвечает или RSS-модуль собирается.");
-            }
-        }
-
-        // Подгрузка видеопотока через Streamlink-ноду на Railway
-        async function loadStream() {
-            try {
-                const r = await fetch(`${BACKEND_URL}/api/stream.json?quality=${currentQuality}`);
-                const data = await r.json();
-                
-                const statusDot = document.getElementById('stream-status-dot');
-                const sourceText = document.getElementById('stream-source-text');
-
-                // Переключаем статус прокси-соединения
-                if(data.status === 'error') {
-                    statusDot.className = 'status-pulse-red';
-                    sourceText.innerHTML = "РЕЗЕРВНЫЙ ПОТОК (ГЕО-БЛОК RTBF)";
-                } else if(data.status === 'test') {
-                    statusDot.className = 'status-pulse-yellow';
-                    sourceText.innerHTML = "ТЕСТОВЫЙ ФИД [RTBF ОФФЛАЙН]";
-                } else {
-                    statusDot.className = 'status-pulse-green';
-                    sourceText.innerHTML = `RTBF AUVIO [${currentQuality.toUpperCase()}]`;
-                }
-
-                if (!data.m3u8) return;
-
-                const box = document.querySelector('.video-ratio-box');
-                const placeholder = box.querySelector('.video-stream-placeholder');
-                if (placeholder) placeholder.remove();
-
-                let video = box.querySelector('video');
-                if (!video) {
-                    video = document.createElement('video');
-                    video.controls = true;
-                    video.style.position = 'absolute';
-                    video.style.inset = '0';
-                    video.style.width = '100%';
-                    video.style.height = '100%';
-                    box.insertBefore(video, box.firstChild);
-                }
-
-                if (window.Hls && Hls.isSupported()) {
-                    if (window.hlsInstance) window.hlsInstance.destroy();
-                    const hls = new Hls();
-                    hls.loadSource(data.m3u8);
-                    hls.attachMedia(video);
-                    window.hlsInstance = hls;
-                    hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(()=>{}));
-                } else {
-                    video.src = data.m3u8;
-                }
-            } catch {
-                console.log("Бэкенд видео-ядра недоступен.");
-            }
-        }
-
-        // Запуск систем
-        loadFeed();
-        loadStream();
-        setInterval(loadFeed, 30000); // автоапдейт новостей раз в 30 секунд
-    </script>
+    <script src="main.js"></script>
 </body>
-</html>
+    </html>
