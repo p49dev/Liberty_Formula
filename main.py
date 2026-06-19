@@ -2,257 +2,240 @@ import os
 import time
 import logging
 import re
-from typing import List, Dict, Optional
+import random
 import requests
-from bs4 import BeautifulSoup
 import feedparser
 import streamlink
 import uvicorn
-from fastapi import FastAPI, Query
+from typing import List, Dict, Optional
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
-# Настройка профессионального логирования в консоль Railway
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
-logger = logging.getLogger("LibertyCore")
+app = FastAPI(title="Liberty Formula Ultimate Engine")
 
-app = FastAPI(title="Liberty Formula Core Engine", version="4.0")
-
+# Жесткий CORS, чтобы никто не угнал твой бэкенд на Railway
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://p49dev.github.io", "http://localhost:5500", "http://127.0.0.1:5500"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# === СИСТЕМА УМНОГО КЭШИРОВАНИЯ (ANTI-BAN) ===
-class NewsCache:
-    def __init__(self, ttl_seconds: int = 300):
-        self.ttl = ttl_seconds
-        self.data: List[Dict] = []
-        self.last_updated: float = 0.0
+security = HTTPBasic()
 
-    def is_expired(self) -> bool:
-        return time.time() - self.last_updated > self.ttl
+# --- СИСТЕМА ДИНАМИЧЕСКИХ ЛОГОВ ДЛЯ KIMI ---
+class LogBufferHandler(logging.Handler):
+    def __init__(self):
+        super().__init__()
+        self.buffer = []
 
-    def update(self, new_data: List[Dict]):
-        self.data = new_data
-        self.last_updated = time.time()
+    def emit(self, record):
+        log_entry = self.format(record)
+        self.buffer.append(log_entry)
+        if len(self.buffer) > 100:  # Ротация: храним только 100 последних строк
+            self.buffer.pop(0)
 
-news_storage = NewsCache(ttl_seconds=300) # Кэш на 5 минут
+logger = logging.getLogger("LibertyCore")
+logger.setLevel(logging.INFO)
+log_handler = LogBufferHandler()
+log_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+logger.addHandler(log_handler)
 
-# HTTP Заголовки реального браузера, чтобы нас не забанили
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-    "Accept-Language": "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3"
+# --- АВТОРЫЗАЦИЯ АДМИНИСТРАТОРА ---
+ADMIN_USER = "Kimi"
+ADMIN_PASS = "bwoah2026"
+
+def authenticate_admin(credentials: HTTPBasicCredentials = Depends(security)):
+    if credentials.username != ADMIN_USER or credentials.password != ADMIN_PASS:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Неверный пароль администратора Kimi",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
+
+# --- ГЛОБАЛЬНОЕ СОСТОЯНИЕ (STATE) ---
+STATE = {
+    "current_gp": "Spanish GP",
+    "status_next": "LIVE NOW",
+    "manual_stream_url": "",
+    "active_audio_feed": "P4/9 LIVE",
+    "audio_delay": 0.0,
+    "race_control_notices": [
+        {"time": "12:00:00", "text": "REDRACE ENGINE ONLINE // NO OVERRIDES", "type": "green"}
+    ]
 }
 
-# === МОДУЛЬ PARSING ENGINE (BS4 + FEEDPARSER) ===
+class CommentatorUpdate(BaseModel):
+    active_audio_feed: str
+    audio_delay: float
+    new_notice_text: Optional[str] = None
+    new_notice_type: Optional[str] = "white"
 
-def clean_html(raw_html: str) -> str:
-    """Очищает текст от остаточных HTML тегов, которые ломают верстку"""
-    if not raw_html:
-        return ""
-    clean_re = re.compile('<.*?>')
-    text = re.sub(clean_re, '', raw_html)
-    return text.strip().replace("&nbsp;", " ").replace('"', "'")
+class AdminUpdate(BaseModel):
+    current_gp: str
+    status_next: str
+    manual_stream_url: str
 
-def analyze_category(title: str, description: str) -> str:
-    """Интеллектуальное распределение новостей по категориям для RedRace Hub"""
-    full_text = f"{title} {description}".lower()
-    
-    # Ключевые слова для критических алертов
-    alerts = ["crash", "penalty", "breaking", "штраф", "авария", "дисквалификация", "уволен", "breaking", "fire", "пожар", "red flag", "красный флаг"]
-    # Ключевые слова для технического анализа/апдейтов
-    tech = ["upgrade", "sidepod", "floor", "engine", "обновления", "днище", "аэродинамика", "телеметрия", "шасси", "крыло", "тесты", "анализ"]
-    
-    if any(word in full_text for word in alerts):
-        return "alert"
-    if any(word in full_text for word in tech):
-        return "tech"
-    return "tech" # По умолчанию отдаем в общую аналитическую ленту
+# --- АВТОМАТИЧЕСКИЙ РОТАТОР БЕСПЛАТНЫХ ПРОКСИ ---
+class ProxyManager:
+    def __init__(self):
+        self.proxies = []
+        self.last_fetched = 0
+        self.ttl = 1200  # Смена баз раз в 20 минут
 
-def fetch_rss_feed() -> List[Dict]:
-    """Сборщик №1: Работает через RSS feedparser"""
-    url = "https://www.motorsport.com/rss/f1/news/"
-    logger.info("Сбор данных через RSS...")
-    feed = feedparser.parse(url)
-    
-    results = []
-    for entry in feed.entries:
-        title = entry.get("title", "")
-        desc = clean_html(entry.get("summary", ""))
-        
-        # Парсим время
-        published = entry.get("published_parsed")
-        time_str = time.strftime("%H:%M", published) if published else "NEW"
-
-        results.append({
-            "title": title,
-            "description": desc[:140] + "..." if len(desc) > 140 else desc,
-            "link": entry.get("link", "#"),
-            "category": analyze_category(title, desc),
-            "time": time_str,
-            "source": "Motorsport RSS"
-        })
-    return results
-
-def fetch_html_backup() -> List[Dict]:
-    """Сборщик №2: BeautifulSoup Парсинг (Резервный на случай сбоя RSS)"""
-    url = "https://www.autosport.com/f1/news/"
-    logger.info("Резервный сбор данных: BeautifulSoup парсинг HTML...")
-    results = []
-    
-    try:
-        response = requests.get(url, headers=HEADERS, timeout=10)
-        if response.status_code != 200:
-            logger.error(f"Autosport ответил кодом: {response.status_code}")
-            return []
-            
-        soup = BeautifulSoup(response.text, "html.parser")
-        
-        # Находим блоки новостей на Autosport (селекторы могут меняться, это классический пример)
-        articles = soup.find_all("div", class_="ms-item") or soup.find_all("article")
-        
-        for article in articles[:12]:
-            title_tag = article.find("a", class_="ms-item__title") or article.find("h2") or article.find("h3")
-            desc_tag = article.find("div", class_="ms-item__summary") or article.find("p")
-            
-            if not title_tag:
+    def fetch_free_proxies(self) -> List[str]:
+        logger.info("Сканирование публичных баз на наличие бесплатных прокси...")
+        found = []
+        sources = [
+            "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=10000&country=all",
+            "https://www.proxy-list.download/api/v1/get?type=http"
+        ]
+        for url in sources:
+            try:
+                res = requests.get(url, timeout=5)
+                if res.status_code == 200:
+                    found.extend(res.text.strip().split("\n"))
+            except Exception:
                 continue
-                
-            title = title_tag.text.strip()
-            link = title_tag.get("href", "")
-            if link and not link.startswith("http"):
-                link = "https://www.autosport.com" + link
-                
-            desc = desc_tag.text.strip() if desc_tag else "Подробности внутри публикации сессии."
-            
-            results.append({
-                "title": title,
-                "description": desc[:140] + "..." if len(desc) > 140 else desc,
-                "link": link,
-                "category": analyze_category(title, desc),
-                "time": "LIVE",
-                "source": "Autosport HTML"
-            })
-    except Exception as e:
-        logger.error(f"Критическая ошибка BeautifulSoup парсера: {e}")
-        
-    return results
+        return [p.strip() for p in found if ":" in p]
 
-# === ENDPOINTS ===
+    def get_proxy(self) -> Optional[str]:
+        if time.time() - self.last_fetched > self.ttl or not self.proxies:
+            raw = self.fetch_free_proxies()
+            if raw:
+                self.proxies = raw
+                self.last_fetched = time.time()
+        return random.choice(self.proxies) if self.proxies else None
+
+proxy_rotator = ProxyManager()
+
+# --- СИСТЕМА КЭШИРОВАНИЯ ДАННЫХ ---
+class DataCache:
+    def __init__(self):
+        self.news = []
+        self.highlights = []
+        self.last_news_update = 0
+        self.last_hl_update = 0
+
+cache = DataCache()
+
+# --- ОТКРЫТЫЕ ЭНДПОИНТЫ API (БЕЗ ПАРОЛЯ) ---
+
+@app.get("/api/state.json")
+def get_state():
+    return STATE
 
 @app.get("/api/feed.json")
-def get_news_feed():
-    """Точка доступа к единой кэшируемой ленте новостей Pit Wall"""
-    if not news_storage.is_expired() and news_storage.data:
-        logger.info("Отдаем новостной фид из локального кэша бэкенда")
-        return {"items": news_storage.data, "cached": True}
-
-    logger.info("Кэш устарел или пуст. Запуск агрегации потоков новостей...")
+def get_news():
+    if time.time() - cache.last_news_update < 300 and cache.news:
+        return {"items": cache.news}
     
-    # Пытаемся взять основной RSS поток
-    aggregated_news = []
+    items = []
     try:
-        aggregated_news = fetch_rss_feed()
+        feed = feedparser.parse("https://www.f1news.ru/export/news.xml")
+        for entry in feed.entries[:12]:
+            clean_desc = re.sub('<.*?>', '', entry.summary).strip()
+            t = entry.title.lower()
+            cat = "alert" if any(w in t for w in ["штраф", "авария", "красный", "breaking"]) else "tech"
+            items.append({
+                "title": entry.title,
+                "description": clean_desc[:120] + "...",
+                "link": entry.link,
+                "category": cat,
+                "time": "LIVE",
+                "source": "F1News"
+            })
+        cache.news = items
+        cache.last_news_update = time.time()
     except Exception as e:
-        logger.error(f"Основной RSS поток упал: {e}. Переключаюсь на BeautifulSoup...")
-        
-    # Если RSS пуст или выдал ошибку, активируем BeautifulSoup парсер
-    if not aggregated_news:
-        aggregated_news = fetch_html_backup()
-        
-    # Если вообще всё упало (нет интернета), отдаем старые данные из кэша, чтобы сайт не умер
-    if not aggregated_news and news_storage.data:
-        logger.warning("Все внешние ресурсы недоступны! Экстренно отдаем старый кэш.")
-        return {"items": news_storage.data, "status": "emergency_backup"}
-        
-    # Защитная заглушка, если бэкенд запущен впервые и сети вообще нет
-    if not aggregated_news:
-        aggregated_news = [{
-            "title": "Liberty Core Engine Online",
-            "description": "Системы телеметрии и парсинга запущены, но внешние шлюзы прессы F1 временно не отдают данные. Проверьте прокси.",
-            "link": "#",
-            "category": "alert",
-            "time": "NOW",
-            "source": "Core"
-        }]
+        logger.error(f"Ошибка парсинга RSS: {e}")
+    return {"items": cache.news}
 
-    # Обновляем глобальный кэш
-    news_storage.update(aggregated_news)
-    return {"items": aggregated_news, "cached": false}
-
+@app.get("/api/highlights.json")
+def get_highlights():
+    if time.time() - cache.last_hl_update < 3600 and cache.highlights:
+        return {"highlights": cache.highlights}
+    
+    # Хайлайты прошлого ГП (Streamlink кушает ссылки YouTube на ура)
+    default_hl = [
+        {"title": "Гран-При Канады 2026 — Лучшие Моменты Гонки", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "duration": "10:14"},
+        {"title": "Квалификация в Монреале — Финальный Сегмент", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "duration": "07:45"}
+    ]
+    cache.highlights = default_hl
+    cache.last_hl_update = time.time()
+    return {"highlights": cache.highlights}
 
 @app.get("/api/stream.json")
-def get_stream_link(quality: str = Query("720p", regex="^(1080p|720p|480p|best|worst)$")):
-    """
-    Интеллектуальный прокси-движок Streamlink для бельгийского RTBF Auvio
-    """
-    # Сюда вставляется ссылка на трансляцию или на сам бельгийский медиаплеер
-    rtbf_live_url = "https://www.rtbf.be/auvio/direct/detail_formule-1_..." 
+def get_stream(quality: str = "720p"):
+    if STATE["manual_stream_url"]:
+        logger.info("Активирован ручной оверрайд стрима из панели Kimi.")
+        return {"status": "active", "m3u8": STATE["manual_stream_url"], "provider": "Админ-Поток"}
+
+    providers = [
+        {"name": "RTBF Бельгия", "url": "https://www.rtbf.be/auvio/direct/detail_formule-1"},
+        {"name": "ORF Австрия", "url": "https://tvthek.orf.at/live"}
+    ]
     
-    logger.info(f"Запрос на дешифровку потока RTBF. Профиль качества: {quality}")
+    session = streamlink.Streamlink()
+    session.set_option("http-headers", "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
     
-    try:
-        # Настройка кастомных опций Streamlink для обхода базовых проверок
-        session = streamlink.Streamlink()
-        session.set_option("http-headers", f"User-Agent={HEADERS['User-Agent']}")
+    for attempt in range(3):
+        proxy = proxy_rotator.get_proxy()
+        if proxy:
+            session.set_option("http-proxy", f"http://{proxy}")
+            session.set_option("https-proxy", f"http://{proxy}")
+            logger.info(f"Обход геоблока через бесплатный прокси: {proxy}")
         
-        # Вытаскиваем манифесты потоков (.m3u8)
-        streams = session.streams(rtbf_live_url)
-        
-        if streams:
-            # Определяем лучшее доступное качество на основе запроса с фронтенда
-            selected_quality = quality
-            if quality not in streams:
-                logger.warning(f"Качество {quality} недоступно для этого стрима. Ротация на 'best'")
-                selected_quality = "best"
+        for p in providers:
+            try:
+                streams = session.streams(p["url"])
+                if streams:
+                    return {"status": "active", "m3u8": streams.get(quality, streams.get("best")).url, "provider": p["name"]}
+            except Exception:
+                continue
                 
-            stream_url = streams[selected_quality].url
-            return {
-                "status": "active",
-                "quality": selected_quality,
-                "m3u8": stream_url,
-                "engine": "Streamlink Core v4"
-            }
+    return {
+        "status": "error",
+        "m3u8": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+        "info": "РЕЗЕРВНЫЙ СИМУЛЯТОР (ВСЕ БАЗЫ СДХОНУЛИ)"
+    }
+
+# ПУЛЬТ КОММЕНТАТОРА — БЕЗ ПАРОЛЯ
+@app.post("/api/commentator/update")
+def commentator_update(data: CommentatorUpdate):
+    STATE["active_audio_feed"] = data.active_audio_feed
+    STATE["audio_delay"] = data.audio_delay
+    
+    if data.new_notice_text:
+        t = time.strftime("%H:%M:%S", time.localtime())
+        STATE["race_control_notices"].insert(0, {
+            "time": t,
+            "text": data.new_notice_text.upper(),
+            "type": data.new_notice_type
+        })
+        if len(STATE["race_control_notices"]) > 8:
+            STATE["race_control_notices"].pop()
             
-        else:
-            logger.warning("Streamlink не нашел активных HLS трансляций по этому URL. Возможно, гонка еще не началась.")
-            return {
-                "status": "test",
-                "m3u8": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
-                "info": "RTBF Stream Offline. Отдан тестовый HLS фид."
-            }
-            
-    except Exception as str_error:
-        logger.error(f"Сбой ядра Streamlink (Возможен Гео-блок / Изменение структуры сайта): {str_error}")
-        # Отдаем красивый тестовый стрим (Mux Video Test), чтобы плеер на фронтенде работал, а не вис черным экраном
-        return {
-            "status": "error",
-            "error_log": str(str_error),
-            "m3u8": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
-            "info": "Ошибка проксирования. Активирован резервный симулятор."
-        }
+    logger.info(f"Смена параметров эфира: Аудио={data.active_audio_feed}, Задержка={data.audio_delay}s")
+    return {"status": "success", "state": STATE}
+
+# --- ЗАКРЫТЫЕ УПРАВЛЯЮЩИЕ МЕТОДЫ (ТРЕБУЮТ ПАРОЛЬ KIMI) ---
+
+@app.post("/api/admin/update")
+def admin_update(data: AdminUpdate, username: str = Depends(authenticate_admin)):
+    STATE["current_gp"] = data.current_gp
+    STATE["status_next"] = data.status_next
+    STATE["manual_stream_url"] = data.manual_stream_url
+    logger.info(f"АДМИНИСТРАТОР {username} принудительно переписал параметры ядра.")
+    return {"status": "success", "state": STATE}
+
+@app.get("/api/admin/logs")
+def get_server_logs(username: str = Depends(authenticate_admin)):
+    return {"logs": log_handler.buffer}
 
 if __name__ == "__main__":
-    # Читаем порт из переменных окружения Railway
-    server_port = int(os.environ.get("PORT", 8000))
-    logger.info(f"Запуск Liberty Core на порту {server_port}...")
-    
-    # Подавление дублирующих логов uvicorn для чистоты трейсинга на Railway
-    uvicorn_log_config = uvicorn.config.LOGGING_CONFIG
-    uvicorn_log_config["loggers"]["uvicorn"]["propagate"] = False
-    
-    uvicorn.run(
-        "main:app", 
-        host="0.0.0.0", 
-        port=server_port, 
-        log_config=uvicorn_log_config,
-        workers=1 # Для кэширования в памяти достаточно одного воркера, чтобы кэш не дробился
-    )
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
