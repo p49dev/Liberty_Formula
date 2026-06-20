@@ -5,7 +5,7 @@
 
 // ───── CONFIG ─────
 // Замени на реальный адрес твоего Railway-сервиса
-const BACKEND = 'libertyformula-production-4740.up.railway.app';
+const BACKEND = 'libertyformula-production.up.railway.app';
 const OPENF1  = 'https://api.openf1.org/v1';
 
 // ───── ROLE SWITCHING ─────
