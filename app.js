@@ -262,3 +262,103 @@ document.addEventListener('click', (e) => {
 });
 
 loadStream();
+
+// ===== НОВЫЙ БЛОК: УПРАВЛЕНИЕ ИСТОЧНИКАМИ (без изменения дизайна) =====
+// Список источников для выбора
+const SOURCES_LIST = {
+    "wearechecking": "https://wearechecking.live/streams-pages/motorsports",
+    "vk_openwheels": "https://vkvideo.ru/@openwheelsgroup",
+    "sportsurge": "https://www.sportsurge.stream/",
+    "servustv": "https://www.servustv.com/live",
+    "rtbf": "https://www.rtbf.be/auvio/",
+    "custom": null
+};
+
+let currentSource = localStorage.getItem('lf_source') || 'wearechecking';
+
+// Функция переключения источника (вызывается из админки)
+function setSource(sourceKey) {
+    if (sourceKey in SOURCES_LIST) {
+        currentSource = sourceKey;
+        localStorage.setItem('lf_source', sourceKey);
+
+        // Отправляем на бэкенд
+        fetch(`${BACKEND}/api/commentator/update`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ source: sourceKey })
+        }).then(() => {
+            // Обновляем отображение источника в интерфейсе
+            const providerDisplay = document.getElementById('provider-name');
+            if (providerDisplay) {
+                providerDisplay.textContent = sourceKey.toUpperCase();
+            }
+            // Перезагружаем поток
+            loadStream();
+        });
+    }
+}
+
+// Добавляем кнопки выбора источника в админ-панель (через JS, без изменения HTML)
+function addSourceSelector() {
+    // Находим место для вставки (например, в боковой панели или в зоне комментатора)
+    const adminArea = document.querySelector('.role-commentator-only .admin-grid') ||
+                      document.querySelector('.role-admin-only .admin-grid') ||
+                      document.querySelector('.panel-head-rss');
+
+    if (!adminArea) return;
+
+    // Создаём контейнер для кнопок
+    const sourceContainer = document.createElement('div');
+    sourceContainer.className = 'source-selector';
+    sourceContainer.style.cssText = 'display:flex; flex-wrap:wrap; gap:4px; margin:10px 0; padding:8px; background:#0c0c10; border-radius:4px; border:1px solid rgba(255,255,255,0.05);';
+
+    sourceContainer.innerHTML = `
+        <div style="font-size:9px; color:#4e5060; text-transform:uppercase; letter-spacing:1px; width:100%; margin-bottom:4px;">Источник сигнала:</div>
+        ${Object.keys(SOURCES_LIST).filter(k => k !== 'custom').map(key => `
+            <button class="source-btn" data-source="${key}"
+                    style="background:${currentSource === key ? '#e10600' : '#141419'};
+                           border:1px solid ${currentSource === key ? '#e10600' : 'rgba(255,255,255,0.07)'};
+                           color:${currentSource === key ? '#fff' : '#9da0b0'};
+                           padding:4px 10px; border-radius:3px;
+                           font-family:'Titillium Web',sans-serif; font-weight:700; font-size:10px;
+                           cursor:pointer; transition:all 0.15s;">
+                ${key.toUpperCase()}
+            </button>
+        `).join('')}
+        <button class="source-btn" data-source="custom"
+                style="background:#141419; border:1px solid rgba(255,255,255,0.07); color:#9da0b0; padding:4px 10px; border-radius:3px; font-family:'Titillium Web',sans-serif; font-weight:700; font-size:10px; cursor:pointer;">
+            + СВОЙ
+        </button>
+    `;
+
+    adminArea.appendChild(sourceContainer);
+
+    // Вешаем обработчики на кнопки
+    sourceContainer.querySelectorAll('.source-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const source = this.dataset.source;
+            if (source === 'custom') {
+                const customUrl = prompt('Введите ссылку на .m3u8 поток:');
+                if (customUrl) {
+                    // Отправляем ручную ссылку на бэкенд
+                    fetch(`${BACKEND}/api/admin/update`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ manual_stream_url: customUrl })
+                    }).then(() => {
+                        loadStream();
+                    });
+                }
+                return;
+            }
+            setSource(source);
+        });
+    });
+}
+
+// Инициализация после загрузки страницы
+document.addEventListener('DOMContentLoaded', () => {
+    // Ждём, пока подгрузится админ-зона
+    setTimeout(addSourceSelector, 1000);
+});
