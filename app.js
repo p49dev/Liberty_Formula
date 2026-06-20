@@ -4,8 +4,8 @@
    ════════════════════════════════════════════════════════ */
 
 // ───── CONFIG ─────
-// Замени на реальный адрес твоего Railway-сервиса
-const BACKEND = 'https://libertyformula-production.up.railway.app:8000';
+// EU-инстанс (Нидерланды) — нужен для RTBF/ARD, у них жёсткий геоблок вне ЕС
+const BACKEND = 'https://libertyformula-production-a845.up.railway.app';
 const OPENF1  = 'https://api.openf1.org/v1';
 
 // ───── ROLE SWITCHING ─────
