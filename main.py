@@ -9,16 +9,52 @@ from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 import uvicorn
 
 app = FastAPI(title="Liberty Formula Backend")
 
+# ========== МОЩНЫЙ CORS ==========
+# 1. Стандартный CORS от FastAPI
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_origins=[
+        "https://p49dev.github.io",
+        "https://p49dev.github.io/",
+        "https://libertyformula-production.up.railway.app",
+        "*"
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,
 )
+
+# 2. Принудительный CORS через middleware (на всякий случай)
+class ForceCORSHeaders(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Если это preflight (OPTIONS) — сразу возвращаем OK
+        if request.method == "OPTIONS":
+            return JSONResponse(
+                content={},
+                status_code=200,
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+                    "Access-Control-Allow-Headers": "*",
+                    "Access-Control-Max-Age": "600"
+                }
+            )
+        
+        response = await call_next(request)
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        return response
+
+app.add_middleware(ForceCORSHeaders)
 
 # ========== КОНФИГ ==========
 SOURCES = {
