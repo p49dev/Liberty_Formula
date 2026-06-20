@@ -1,3 +1,6 @@
+import os
+import subprocess
+import tempfile
 import streamlink
 import yt_dlp
 import feedparser
@@ -5,11 +8,12 @@ from datetime import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from free_python_vpn.free_python_vpn import connect_vpn_global, disconnect_vpn_global
 import uvicorn
 
 app = FastAPI(title="Liberty Formula Backend")
 
-# ========== CORS (для твоего фронтенда) ==========
+# ========== CORS ==========
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,7 +25,7 @@ app.add_middleware(
 SOURCES = {
     "servustv": "https://www.servustv.com/live",
     "rtbf": "https://www.rtbf.be/auvio/...",
-    "queen": "https://queen-of-motorsport.com/live",
+    "srf": "https://www.srf.ch/play/tv/live",
     "custom": None
 }
 
@@ -34,7 +38,40 @@ state_cache = {
     "last_update": None
 }
 
-# ========== ФУНКЦИИ ==========
+# ========== VPN ==========
+VPN_FOLDER = "vpn/"
+TEMP_CONF = "temp.conf"
+TEMP_CONF_NAME = "temp"
+
+def connect_vpn():
+    """Подключает VPN через Швейцарию"""
+    try:
+        connect_vpn_global(
+            websites=[],
+            index_file=None,
+            vpn_folder=VPN_FOLDER,
+            temp_file=TEMP_CONF,
+            temp_file_name=TEMP_CONF_NAME
+        )
+        print("VPN подключён (Швейцария)")
+        return True
+    except Exception as e:
+        print(f"Ошибка подключения VPN: {e}")
+        return False
+
+def disconnect_vpn():
+    """Отключает VPN"""
+    try:
+        disconnect_vpn_global(
+            index_file=None,
+            temp_file=TEMP_CONF,
+            temp_file_name=TEMP_CONF_NAME
+        )
+        print("VPN отключён")
+    except Exception as e:
+        print(f"Ошибка отключения VPN: {e}")
+
+# ========== STREAMLINK ==========
 def get_streamlink_session():
     session = streamlink.Streamlink()
     session.set_option("http-header", {
@@ -53,6 +90,7 @@ def fetch_via_streamlink(url):
         print(f"Streamlink error: {e}")
         return None
 
+# ========== YT-DLP (ЗАПАСНОЙ) ==========
 def fetch_via_ytdlp(url):
     try:
         ydl_opts = {
@@ -75,19 +113,31 @@ async def get_stream():
     if manual_stream_url:
         return {"m3u8": manual_stream_url, "provider": "Ручной ввод", "status": "ok"}
 
-    url = SOURCES.get(current_source)
-    if not url:
-        return {"status": "error", "info": "Источник не выбран"}
+    vpn_connected = False
+    try:
+        # Подключаем VPN
+        vpn_connected = connect_vpn()
+        if not vpn_connected:
+            return {"status": "error", "info": "Не удалось подключить VPN"}
 
-    stream_url = fetch_via_streamlink(url)
-    if stream_url:
-        return {"m3u8": stream_url, "provider": current_source.upper(), "status": "ok"}
+        url = SOURCES.get(current_source)
+        if not url:
+            return {"status": "error", "info": "Источник не выбран"}
 
-    stream_url = fetch_via_ytdlp(url)
-    if stream_url:
-        return {"m3u8": stream_url, "provider": f"{current_source.upper()} (yt-dlp)", "status": "ok"}
+        # Пробуем Streamlink
+        stream_url = fetch_via_streamlink(url)
+        if stream_url:
+            return {"m3u8": stream_url, "provider": current_source.upper(), "status": "ok"}
 
-    return {"status": "error", "info": "Не удалось найти поток"}
+        # Пробуем yt-dlp
+        stream_url = fetch_via_ytdlp(url)
+        if stream_url:
+            return {"m3u8": stream_url, "provider": f"{current_source.upper()} (yt-dlp)", "status": "ok"}
+
+        return {"status": "error", "info": "Не удалось найти поток"}
+    finally:
+        if vpn_connected:
+            disconnect_vpn()
 
 @app.get("/api/state.json")
 async def get_state():
