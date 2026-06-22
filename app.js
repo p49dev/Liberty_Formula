@@ -205,50 +205,118 @@ function filterNews(cat) {
 refreshNews();
 setInterval(refreshNews, 60000);
 
-// ───── STREAM (RTBF через Railway proxy, Streamlink backend) ─────
+// ───── STREAM (с поддержкой Shaka Player) ─────
 let hls = null;
 let syncOffset = 0;
+let shakaPlayer = null;
 
 async function loadStream() {
   const diagStream = document.getElementById('diagStream');
   const adminStatus = document.getElementById('adminStreamStatus');
   const empty = document.getElementById('videoEmpty');
   const video = document.getElementById('player');
+  const container = document.getElementById('shaka-player-container');
+  const providerDisplay = document.getElementById('provider-name');
 
   const data = await fetchJSON(`${BACKEND}/api/stream.json`);
 
   if (!data || !data.m3u8 || data.status === 'error') {
     if (diagStream) diagStream.className = 'diag-pulse err';
     if (adminStatus) adminStatus.textContent = data?.info || 'бэкенд недоступен';
+    if (providerDisplay) providerDisplay.textContent = 'ОШИБКА ПОТОКА';
     return;
   }
 
   if (diagStream) diagStream.className = 'diag-pulse ok';
   if (adminStatus) adminStatus.textContent = 'поток активен';
+  if (providerDisplay) providerDisplay.textContent = data.provider || 'LIVE ПОТОК';
 
   const pulse = document.getElementById('streamPulse');
   if (pulse) pulse.classList.add('live');
 
-  if (data.m3u8.includes('.m3u8') && window.Hls && Hls.isSupported()) {
+  // ==== Пытаемся загрузить через Shaka Player ====
+  try {
+    // Показываем контейнер Shaka, скрываем старый video
+    container.style.display = 'block';
+    video.style.display = 'none';
+
+    // Уничтожаем старый плеер, если он есть
+    if (shakaPlayer) {
+      await shakaPlayer.destroy();
+      shakaPlayer = null;
+    }
+
+    // Создаём новый плеер
+    shakaPlayer = new shaka.Player(container);
+    window.shakaPlayer = shakaPlayer; // для отладки
+
+    // Обработка ошибок Shaka
+    shakaPlayer.addEventListener('error', (event) => {
+      console.error('Shaka error:', event.detail);
+      // Пробуем откатиться на hls.js
+      fallbackToHls(data.m3u8);
+    });
+
+    // Загружаем поток
+    await shakaPlayer.load(data.m3u8);
+    empty.classList.add('hidden');
+    console.log('Shaka Player загрузил поток');
+  } catch (error) {
+    console.error('Shaka Player не справился:', error);
+    // Откат на hls.js
+    fallbackToHls(data.m3u8);
+  }
+}
+
+function fallbackToHls(url) {
+  const container = document.getElementById('shaka-player-container');
+  const video = document.getElementById('player');
+  const empty = document.getElementById('videoEmpty');
+
+  // Прячем Shaka, показываем старый video
+  container.style.display = 'none';
+  video.style.display = 'block';
+
+  // Если Hls доступен — используем его
+  if (window.Hls && Hls.isSupported()) {
     if (hls) hls.destroy();
     hls = new Hls();
-    hls.loadSource(data.m3u8);
+    hls.loadSource(url);
     hls.attachMedia(video);
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
       video.play().catch(()=>{});
       empty.classList.add('hidden');
     });
+    hls.on(Hls.Events.ERROR, (event, data) => {
+      console.error('Hls error:', data);
+      // Прямой fallback, если hls.js тоже не работает
+      video.src = url;
+      video.play().catch(()=>{});
+    });
   } else {
-    video.src = data.m3u8;
-    video.play().then(() => empty.classList.add('hidden')).catch(()=>{});
+    // Самый последний вариант — прямой src
+    video.src = url;
+    video.play().then(() => {
+      empty.classList.add('hidden');
+    }).catch(()=>{});
   }
 }
 
 function adjustSync(delta) {
   syncOffset = Math.round((syncOffset + delta) * 10) / 10;
   document.getElementById('syncVal').textContent = `${syncOffset.toFixed(1)}s`;
+  
+  // Пытаемся синхронизировать Shaka или hls.js
   const video = document.getElementById('player');
-  if (video && !video.paused) {
+  const container = document.getElementById('shaka-player-container');
+  
+  if (container.style.display !== 'none' && shakaPlayer) {
+    // Для Shaka: смещаем время
+    try {
+      const currentTime = shakaPlayer.getMediaElement().currentTime;
+      shakaPlayer.getMediaElement().currentTime = Math.max(0, currentTime + delta);
+    } catch (e) {}
+  } else if (video && !video.paused) {
     video.currentTime = Math.max(0, video.currentTime + delta);
   }
 }
