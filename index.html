@@ -78,8 +78,10 @@
   <section class="col-video">
 
     <div class="video-panel">
-      <div class="video-box">
-        <video id="player" playsinline></video>
+      <div class="video-box" id="video-box">
+        <!-- Shaka Player будет вставлен сюда -->
+        <div id="shaka-player-container" style="width:100%; height:100%; background:#000;"></div>
+        <video id="player" style="display:none;" playsinline></video>
         <div class="video-empty" id="videoEmpty">
           <div class="spinner"></div>
           <span>ПОИСК ПОТОКА…</span>
@@ -207,7 +209,7 @@
 
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.12/dist/hls.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.0/shaka-player.compiled.js"></script>
 <script src="app.js?v=5.0"></script>
 </body>
-  </html>
+                                                                                                                                </html>
