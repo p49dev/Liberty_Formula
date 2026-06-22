@@ -4,7 +4,6 @@
    ════════════════════════════════════════════════════════ */
 
 // ───── CONFIG ─────
-// EU-инстанс (Нидерланды) — нужен для RTBF/ARD, у них жёсткий геоблок вне ЕС
 const BACKEND = 'https://libertyformula-production-a845.up.railway.app';
 const OPENF1  = 'https://api.openf1.org/v1';
 
@@ -205,17 +204,15 @@ function filterNews(cat) {
 refreshNews();
 setInterval(refreshNews, 60000);
 
-// ───── STREAM (с поддержкой Shaka Player) ─────
-let hls = null;
+// ───── STREAM (Plyr + hls.js) ─────
+let player = null;
 let syncOffset = 0;
-let shakaPlayer = null;
 
 async function loadStream() {
   const diagStream = document.getElementById('diagStream');
   const adminStatus = document.getElementById('adminStreamStatus');
   const empty = document.getElementById('videoEmpty');
   const video = document.getElementById('player');
-  const container = document.getElementById('shaka-player-container');
   const providerDisplay = document.getElementById('provider-name');
 
   const data = await fetchJSON(`${BACKEND}/api/stream.json`);
@@ -234,54 +231,25 @@ async function loadStream() {
   const pulse = document.getElementById('streamPulse');
   if (pulse) pulse.classList.add('live');
 
-  // ==== Пытаемся загрузить через Shaka Player ====
-  try {
-    // Показываем контейнер Shaka, скрываем старый video
-    container.style.display = 'block';
-    video.style.display = 'none';
-
-    // Уничтожаем старый плеер, если он есть
-    if (shakaPlayer) {
-      await shakaPlayer.destroy();
-      shakaPlayer = null;
-    }
-
-    // Создаём новый плеер
-    shakaPlayer = new shaka.Player(container);
-    window.shakaPlayer = shakaPlayer; // для отладки
-
-    // Обработка ошибок Shaka
-    shakaPlayer.addEventListener('error', (event) => {
-      console.error('Shaka error:', event.detail);
-      // Пробуем откатиться на hls.js
-      fallbackToHls(data.m3u8);
-    });
-
-    // Загружаем поток
-    await shakaPlayer.load(data.m3u8);
-    empty.classList.add('hidden');
-    console.log('Shaka Player загрузил поток');
-  } catch (error) {
-    console.error('Shaka Player не справился:', error);
-    // Откат на hls.js
-    fallbackToHls(data.m3u8);
+  // ==== Инициализация Plyr ====
+  // Если плеер уже создан — уничтожаем
+  if (player) {
+    player.destroy();
+    player = null;
   }
-}
 
-function fallbackToHls(url) {
-  const container = document.getElementById('shaka-player-container');
-  const video = document.getElementById('player');
-  const empty = document.getElementById('videoEmpty');
+  // Создаём новый плеер
+  player = new Plyr(video, {
+    controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
+    captions: { active: true, update: true },
+    settings: ['speed'],
+    speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5] }
+  });
 
-  // Прячем Shaka, показываем старый video
-  container.style.display = 'none';
-  video.style.display = 'block';
-
-  // Если Hls доступен — используем его
-  if (window.Hls && Hls.isSupported()) {
-    if (hls) hls.destroy();
-    hls = new Hls();
-    hls.loadSource(url);
+  // ==== Загрузка HLS через hls.js ====
+  if (Hls.isSupported()) {
+    const hls = new Hls();
+    hls.loadSource(data.m3u8);
     hls.attachMedia(video);
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
       video.play().catch(()=>{});
@@ -289,13 +257,13 @@ function fallbackToHls(url) {
     });
     hls.on(Hls.Events.ERROR, (event, data) => {
       console.error('Hls error:', data);
-      // Прямой fallback, если hls.js тоже не работает
-      video.src = url;
+      // Fallback: пробуем напрямую
+      video.src = data.m3u8;
       video.play().catch(()=>{});
     });
-  } else {
-    // Самый последний вариант — прямой src
-    video.src = url;
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    // Для Safari
+    video.src = data.m3u8;
     video.play().then(() => {
       empty.classList.add('hidden');
     }).catch(()=>{});
@@ -305,18 +273,8 @@ function fallbackToHls(url) {
 function adjustSync(delta) {
   syncOffset = Math.round((syncOffset + delta) * 10) / 10;
   document.getElementById('syncVal').textContent = `${syncOffset.toFixed(1)}s`;
-  
-  // Пытаемся синхронизировать Shaka или hls.js
   const video = document.getElementById('player');
-  const container = document.getElementById('shaka-player-container');
-  
-  if (container.style.display !== 'none' && shakaPlayer) {
-    // Для Shaka: смещаем время
-    try {
-      const currentTime = shakaPlayer.getMediaElement().currentTime;
-      shakaPlayer.getMediaElement().currentTime = Math.max(0, currentTime + delta);
-    } catch (e) {}
-  } else if (video && !video.paused) {
+  if (video && !video.paused) {
     video.currentTime = Math.max(0, video.currentTime + delta);
   }
 }
@@ -331,8 +289,7 @@ document.addEventListener('click', (e) => {
 
 loadStream();
 
-// ===== НОВЫЙ БЛОК: УПРАВЛЕНИЕ ИСТОЧНИКАМИ (без изменения дизайна) =====
-// Список источников для выбора
+// ===== УПРАВЛЕНИЕ ИСТОЧНИКАМИ =====
 const SOURCES_LIST = {
     "wearechecking": "https://wearechecking.live/streams-pages/motorsports",
     "vk_openwheels": "https://vkvideo.ru/@openwheelsgroup",
@@ -344,39 +301,31 @@ const SOURCES_LIST = {
 
 let currentSource = localStorage.getItem('lf_source') || 'wearechecking';
 
-// Функция переключения источника (вызывается из админки)
 function setSource(sourceKey) {
     if (sourceKey in SOURCES_LIST) {
         currentSource = sourceKey;
         localStorage.setItem('lf_source', sourceKey);
-
-        // Отправляем на бэкенд
         fetch(`${BACKEND}/api/commentator/update`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ source: sourceKey })
         }).then(() => {
-            // Обновляем отображение источника в интерфейсе
             const providerDisplay = document.getElementById('provider-name');
             if (providerDisplay) {
                 providerDisplay.textContent = sourceKey.toUpperCase();
             }
-            // Перезагружаем поток
             loadStream();
         });
     }
 }
 
-// Добавляем кнопки выбора источника в админ-панель (через JS, без изменения HTML)
 function addSourceSelector() {
-    // Находим место для вставки (например, в боковой панели или в зоне комментатора)
     const adminArea = document.querySelector('.role-commentator-only .admin-grid') ||
                       document.querySelector('.role-admin-only .admin-grid') ||
                       document.querySelector('.panel-head-rss');
 
     if (!adminArea) return;
 
-    // Создаём контейнер для кнопок
     const sourceContainer = document.createElement('div');
     sourceContainer.className = 'source-selector';
     sourceContainer.style.cssText = 'display:flex; flex-wrap:wrap; gap:4px; margin:10px 0; padding:8px; background:#0c0c10; border-radius:4px; border:1px solid rgba(255,255,255,0.05);';
@@ -402,14 +351,12 @@ function addSourceSelector() {
 
     adminArea.appendChild(sourceContainer);
 
-    // Вешаем обработчики на кнопки
     sourceContainer.querySelectorAll('.source-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const source = this.dataset.source;
             if (source === 'custom') {
                 const customUrl = prompt('Введите ссылку на .m3u8 поток:');
                 if (customUrl) {
-                    // Отправляем ручную ссылку на бэкенд
                     fetch(`${BACKEND}/api/admin/update`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -425,8 +372,6 @@ function addSourceSelector() {
     });
 }
 
-// Инициализация после загрузки страницы
 document.addEventListener('DOMContentLoaded', () => {
-    // Ждём, пока подгрузится админ-зона
     setTimeout(addSourceSelector, 1000);
 });
