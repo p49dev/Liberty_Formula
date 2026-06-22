@@ -170,7 +170,7 @@ function renderHUD(leader) {
 refreshTiming();
 setInterval(refreshTiming, 5000);
 
-// ───── RSS NEWS (через Railway-бэкенд) ─────
+// ───── RSS NEWS ─────
 async function refreshNews() {
   const diagRSS = document.getElementById('diagRSS');
   const data = await fetchJSON(`${BACKEND}/api/feed.json`);
@@ -204,8 +204,8 @@ function filterNews(cat) {
 refreshNews();
 setInterval(refreshNews, 60000);
 
-// ───── STREAM (Plyr + hls.js) ─────
-let player = null;
+// ───── STREAM (чистый hls.js) ─────
+let hls = null;
 let syncOffset = 0;
 
 async function loadStream() {
@@ -231,24 +231,10 @@ async function loadStream() {
   const pulse = document.getElementById('streamPulse');
   if (pulse) pulse.classList.add('live');
 
-  // ==== Инициализация Plyr ====
-  // Если плеер уже создан — уничтожаем
-  if (player) {
-    player.destroy();
-    player = null;
-  }
-
-  // Создаём новый плеер
-  player = new Plyr(video, {
-    controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
-    captions: { active: true, update: true },
-    settings: ['speed'],
-    speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5] }
-  });
-
-  // ==== Загрузка HLS через hls.js ====
-  if (Hls.isSupported()) {
-    const hls = new Hls();
+  // ==== Чистый hls.js ====
+  if (window.Hls && Hls.isSupported()) {
+    if (hls) hls.destroy();
+    hls = new Hls();
     hls.loadSource(data.m3u8);
     hls.attachMedia(video);
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -257,12 +243,12 @@ async function loadStream() {
     });
     hls.on(Hls.Events.ERROR, (event, data) => {
       console.error('Hls error:', data);
-      // Fallback: пробуем напрямую
+      // Попытка восстановления через прямой src
       video.src = data.m3u8;
       video.play().catch(()=>{});
     });
-  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    // Для Safari
+  } else {
+    // Для Safari или старых браузеров
     video.src = data.m3u8;
     video.play().then(() => {
       empty.classList.add('hidden');
