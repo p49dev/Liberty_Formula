@@ -273,6 +273,7 @@ async function loadStream(forceReload = false) {
       },
       onReady: () => {
         empty.classList.add('hidden');
+        clapprPlayer.play();
       },
       onError: (e) => {
         console.error('Clappr error:', e);
@@ -280,6 +281,11 @@ async function loadStream(forceReload = false) {
       }
     }
   });
+
+  // Убираем спиннер принудительно через 2 сек
+  setTimeout(() => {
+    empty.classList.add('hidden');
+  }, 2000);
 
   if (streamRefreshTimer) clearInterval(streamRefreshTimer);
   streamRefreshTimer = setInterval(() => loadStream(false), 30000);
