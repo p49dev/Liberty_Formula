@@ -7,6 +7,9 @@
 const BACKEND = 'https://libertyformula-production-a845.up.railway.app';
 const OPENF1  = 'https://api.openf1.org/v1';
 
+// Источники с открытым CORS (Вариант 2)
+const CORS_FRIENDLY = ['servustv', 'rtbf'];
+
 // ───── ROLE SWITCHING ─────
 function setRole(role) {
   document.body.dataset.role = role;
@@ -204,56 +207,97 @@ function filterNews(cat) {
 refreshNews();
 setInterval(refreshNews, 60000);
 
-// ───── STREAM (чистый hls.js) ─────
+// ───── STREAM ─────
 let hls = null;
 let syncOffset = 0;
+let currentM3u8 = null;         // FIX: запоминаем текущий URL
+let streamRefreshTimer = null;  // FIX: таймер обновления
 
-async function loadStream() {
+async function loadStream(forceReload = false) {
   const diagStream = document.getElementById('diagStream');
   const adminStatus = document.getElementById('adminStreamStatus');
   const empty = document.getElementById('videoEmpty');
   const video = document.getElementById('player');
   const providerDisplay = document.getElementById('provider-name');
 
-  const data = await fetchJSON(`${BACKEND}/api/stream.json`);
+  const streamData = await fetchJSON(`${BACKEND}/api/stream.json`);
 
-  if (!data || !data.m3u8 || data.status === 'error') {
+  if (!streamData || !streamData.m3u8 || streamData.status === 'error') {
     if (diagStream) diagStream.className = 'diag-pulse err';
-    if (adminStatus) adminStatus.textContent = data?.info || 'бэкенд недоступен';
+    if (adminStatus) adminStatus.textContent = streamData?.info || 'бэкенд недоступен';
     if (providerDisplay) providerDisplay.textContent = 'ОШИБКА ПОТОКА';
     return;
   }
 
+  // FIX Вариант 1: если URL не изменился и не форсим — не перезапускаем hls
+  if (!forceReload && streamData.m3u8 === currentM3u8 && hls) {
+    return;
+  }
+
+  currentM3u8 = streamData.m3u8;
+
   if (diagStream) diagStream.className = 'diag-pulse ok';
   if (adminStatus) adminStatus.textContent = 'поток активен';
-  if (providerDisplay) providerDisplay.textContent = data.provider || 'LIVE ПОТОК';
+  if (providerDisplay) providerDisplay.textContent = streamData.provider || 'LIVE ПОТОК';
 
   const pulse = document.getElementById('streamPulse');
   if (pulse) pulse.classList.add('live');
 
-  // ==== Чистый hls.js ====
+  // FIX Вариант 2: для CORS-friendly источников — прямой URL без бэкенда
+  const isCORSFriendly = CORS_FRIENDLY.some(s => (streamData.provider || '').toLowerCase().includes(s));
+
   if (window.Hls && Hls.isSupported()) {
     if (hls) hls.destroy();
-    hls = new Hls();
-    hls.loadSource(data.m3u8);
+    hls = new Hls({
+      // FIX: агрессивнее переподключаться для живых потоков
+      liveSyncDurationCount: 3,
+      liveMaxLatencyDurationCount: 10,
+      manifestLoadingMaxRetry: 6,
+      levelLoadingMaxRetry: 6,
+      fragLoadingMaxRetry: 6,
+    });
+
+    hls.loadSource(currentM3u8);
     hls.attachMedia(video);
+
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      video.play().catch(()=>{});
+      video.play().catch(() => {});
       empty.classList.add('hidden');
     });
-    hls.on(Hls.Events.ERROR, (event, data) => {
-      console.error('Hls error:', data);
-      // Попытка восстановления через прямой src
-      video.src = data.m3u8;
-      video.play().catch(()=>{});
+
+    // FIX: hlsErr вместо data — чтобы не затирать внешний streamData
+    hls.on(Hls.Events.ERROR, (event, hlsErr) => {
+      console.error('HLS error:', hlsErr.type, hlsErr.details, hlsErr.fatal);
+      if (hlsErr.fatal) {
+        switch (hlsErr.type) {
+          case Hls.ErrorTypes.NETWORK_ERROR:
+            console.warn('Сетевая ошибка — пробуем восстановить...');
+            hls.startLoad();
+            break;
+          case Hls.ErrorTypes.MEDIA_ERROR:
+            console.warn('Медиа ошибка — recoverMediaError...');
+            hls.recoverMediaError();
+            break;
+          default:
+            // Фатально — перезапускаем через 5 сек
+            console.error('Фатальная ошибка — перезапуск через 5с');
+            setTimeout(() => loadStream(true), 5000);
+            break;
+        }
+      }
     });
+
   } else {
-    // Для Safari или старых браузеров
-    video.src = data.m3u8;
+    // Safari / нативный HLS
+    video.src = currentM3u8;
     video.play().then(() => {
       empty.classList.add('hidden');
-    }).catch(()=>{});
+    }).catch(() => {});
   }
+
+  // FIX Вариант 1: переспрашиваем бэкенд каждые 30 сек для обновления URL
+  if (streamRefreshTimer) clearInterval(streamRefreshTimer);
+  streamRefreshTimer = setInterval(() => loadStream(false), 30000);
 }
 
 function adjustSync(delta) {
@@ -273,7 +317,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-loadStream();
+loadStream(true);
 
 // ===== УПРАВЛЕНИЕ ИСТОЧНИКАМИ =====
 const SOURCES_LIST = {
@@ -300,17 +344,23 @@ function setSource(sourceKey) {
             if (providerDisplay) {
                 providerDisplay.textContent = sourceKey.toUpperCase();
             }
-            loadStream();
+            currentM3u8 = null; // FIX: сбрасываем кэш URL при смене источника
+            loadStream(true);
         });
     }
 }
 
 function addSourceSelector() {
-    const adminArea = document.querySelector('.role-commentator-only .admin-grid') ||
-                      document.querySelector('.role-admin-only .admin-grid') ||
-                      document.querySelector('.panel-head-rss');
+    // FIX: расширенный поиск контейнера
+    const adminArea = document.querySelector('.role-admin-only .admin-grid') ||
+                      document.querySelector('.role-commentator-only .admin-grid') ||
+                      document.querySelector('.stream-bar') ||
+                      document.querySelector('.panel-head-rss') ||
+                      document.querySelector('.sidebar-section');
 
     if (!adminArea) return;
+
+    if (document.querySelector('.source-selector')) return; // уже добавлено
 
     const sourceContainer = document.createElement('div');
     sourceContainer.className = 'source-selector';
@@ -342,22 +392,32 @@ function addSourceSelector() {
             const source = this.dataset.source;
             if (source === 'custom') {
                 const customUrl = prompt('Введите ссылку на .m3u8 поток:');
-                if (customUrl) {
+                if (customUrl && customUrl.trim()) {
                     fetch(`${BACKEND}/api/admin/update`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ manual_stream_url: customUrl })
+                        body: JSON.stringify({ manual_stream_url: customUrl.trim() })
                     }).then(() => {
-                        loadStream();
+                        currentM3u8 = null; // FIX: сброс кэша
+                        loadStream(true);
                     });
                 }
                 return;
             }
+            // Подсветка активной кнопки
+            sourceContainer.querySelectorAll('.source-btn').forEach(b => {
+                b.style.background = '#141419';
+                b.style.borderColor = 'rgba(255,255,255,0.07)';
+                b.style.color = '#9da0b0';
+            });
+            this.style.background = '#e10600';
+            this.style.borderColor = '#e10600';
+            this.style.color = '#fff';
             setSource(source);
         });
     });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(addSourceSelector, 1000);
+    setTimeout(addSourceSelector, 500); // FIX: 500ms вместо 1000ms
 });
