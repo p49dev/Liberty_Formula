@@ -80,7 +80,7 @@
     <div class="video-panel">
       <div class="video-box" id="video-box">
         <!-- Видео-элемент для hls.js -->
-        <video id="player" playsinline controls></video>
+        <video-js id="player" class="vjs-default-skin vjs-big-play-centered" playsinline controls></video-js>
         <div class="video-empty" id="videoEmpty">
           <div class="spinner"></div>
           <span>ПОИСК ПОТОКА…</span>
@@ -209,7 +209,9 @@
 </main>
 
 <!-- Чистый hls.js без наворотов -->
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/video.js/8.6.0/video-js.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/8.6.0/video.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-contrib-hls/5.15.0/videojs-contrib-hls.min.js"></script>
 <script src="app.js?v=5.0"></script>
 </body>
-  </html>
+</html>
