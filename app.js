@@ -207,8 +207,8 @@ function filterNews(cat) {
 refreshNews();
 setInterval(refreshNews, 60000);
 
-// ───── STREAM (Video.js) ─────
-let vjsPlayer = null;
+// ───── STREAM (Clappr) ─────
+let clapprPlayer = null;
 let syncOffset = 0;
 let currentM3u8 = null;
 let streamRefreshTimer = null;
@@ -228,7 +228,7 @@ async function loadStream(forceReload = false) {
     return;
   }
 
-  if (!forceReload && streamData.m3u8 === currentM3u8 && vjsPlayer) return;
+  if (!forceReload && streamData.m3u8 === currentM3u8 && clapprPlayer) return;
 
   currentM3u8 = streamData.m3u8;
 
@@ -239,34 +239,47 @@ async function loadStream(forceReload = false) {
   const pulse = document.getElementById('streamPulse');
   if (pulse) pulse.classList.add('live');
 
-  if (!vjsPlayer) {
-    vjsPlayer = videojs('player', {
-      techOrder: ['html5'],
-      html5: {
-        hls: {
-          overrideNative: true,
-          enableLowInitialPlaylist: true,
-          smoothQualityChange: true,
-        }
-      },
-      liveui: true,
-      controls: true,
-      autoplay: true,
-      muted: false,
-    });
-
-    vjsPlayer.on('error', () => {
-      console.error('Video.js error:', vjsPlayer.error());
-      setTimeout(() => loadStream(true), 5000);
-    });
-
-    vjsPlayer.on('playing', () => {
-      empty.classList.add('hidden');
-    });
+  // Уничтожаем старый инстанс
+  if (clapprPlayer) {
+    clapprPlayer.destroy();
+    clapprPlayer = null;
+    // Восстанавливаем div после destroy
+    const box = document.getElementById('video-box');
+    const existing = document.getElementById('player');
+    if (!existing) {
+      const div = document.createElement('div');
+      div.id = 'player';
+      box.insertBefore(div, box.firstChild);
+    }
   }
 
-  vjsPlayer.src({ src: currentM3u8, type: 'application/x-mpegURL' });
-  vjsPlayer.play().catch(() => {});
+  clapprPlayer = new Clappr.Player({
+    source: currentM3u8,
+    parentId: '#player',
+    width: '100%',
+    height: '100%',
+    autoPlay: true,
+    mute: false,
+    hlsjsConfig: {
+      enableWorker: true,
+      liveSyncDurationCount: 3,
+      liveMaxLatencyDurationCount: 10,
+      manifestLoadingMaxRetry: 6,
+      fragLoadingMaxRetry: 6,
+    },
+    events: {
+      onPlay: () => {
+        empty.classList.add('hidden');
+      },
+      onReady: () => {
+        empty.classList.add('hidden');
+      },
+      onError: (e) => {
+        console.error('Clappr error:', e);
+        setTimeout(() => loadStream(true), 5000);
+      }
+    }
+  });
 
   if (streamRefreshTimer) clearInterval(streamRefreshTimer);
   streamRefreshTimer = setInterval(() => loadStream(false), 30000);
