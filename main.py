@@ -1,4 +1,5 @@
 import os
+import time
 import streamlink
 import yt_dlp
 import feedparser
@@ -30,6 +31,14 @@ SOURCES = {
 
 current_source = "wearechecking"
 manual_stream_url = None
+
+# FIX: кэш потока — не гоняем streamlink каждый запрос
+stream_cache = {
+    "url": None,
+    "provider": None,
+    "ts": 0,
+    "ttl": 45  # секунд — живой поток обновляем каждые 45с
+}
 
 state_cache = {
     "current_gp": "Bahrain GP",
@@ -73,8 +82,9 @@ def fetch_via_ytdlp(url):
 # ========== ЭНДПОИНТЫ ==========
 @app.get("/api/stream.json")
 async def get_stream():
-    global manual_stream_url, current_source
+    global manual_stream_url, current_source, stream_cache
 
+    # Ручной URL — отдаём сразу без кэша
     if manual_stream_url:
         return {"m3u8": manual_stream_url, "provider": "Ручной ввод", "status": "ok"}
 
@@ -82,14 +92,32 @@ async def get_stream():
     if not url:
         return {"status": "error", "info": "Источник не выбран"}
 
+    # FIX: кэш — не долбим streamlink каждые 30 сек с фронта
+    now = time.time()
+    if (stream_cache["url"] and
+        stream_cache["ts"] and
+        now - stream_cache["ts"] < stream_cache["ttl"]):
+        return {
+            "m3u8": stream_cache["url"],
+            "provider": stream_cache["provider"],
+            "status": "ok",
+            "cached": True
+        }
+
     # Пробуем Streamlink
     stream_url = fetch_via_streamlink(url)
     if stream_url:
+        stream_cache["url"] = stream_url
+        stream_cache["provider"] = current_source.upper()
+        stream_cache["ts"] = now
         return {"m3u8": stream_url, "provider": current_source.upper(), "status": "ok"}
 
     # Пробуем yt-dlp
     stream_url = fetch_via_ytdlp(url)
     if stream_url:
+        stream_cache["url"] = stream_url
+        stream_cache["provider"] = f"{current_source.upper()} (yt-dlp)"
+        stream_cache["ts"] = now
         return {"m3u8": stream_url, "provider": f"{current_source.upper()} (yt-dlp)", "status": "ok"}
 
     return {"status": "error", "info": "Не удалось найти поток"}
@@ -126,19 +154,27 @@ async def get_highlights():
 
 @app.post("/api/commentator/update")
 async def commentator_update(data: dict):
-    global current_source
+    global current_source, stream_cache
     if data.get("source") in SOURCES:
         current_source = data["source"]
+        # FIX: сброс кэша при смене источника
+        stream_cache["url"] = None
+        stream_cache["ts"] = 0
     return {"status": "ok", "source": current_source}
 
 @app.post("/api/admin/update")
 async def admin_update(data: dict):
-    global manual_stream_url, current_source
-    if data.get("manual_stream_url"):
-        manual_stream_url = data["manual_stream_url"]
+    global manual_stream_url, current_source, stream_cache
+    if "manual_stream_url" in data:
+        # FIX: пустая строка сбрасывает ручной URL
+        manual_stream_url = data["manual_stream_url"].strip() or None
+        stream_cache["url"] = None
+        stream_cache["ts"] = 0
         return {"status": "ok"}
     if data.get("source"):
         current_source = data["source"]
+        stream_cache["url"] = None
+        stream_cache["ts"] = 0
     return {"status": "ok"}
 
 @app.get("/api/admin/logs")
