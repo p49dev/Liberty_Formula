@@ -207,17 +207,16 @@ function filterNews(cat) {
 refreshNews();
 setInterval(refreshNews, 60000);
 
-// ───── STREAM ─────
-let hls = null;
+// ───── STREAM (Video.js) ─────
+let vjsPlayer = null;
 let syncOffset = 0;
-let currentM3u8 = null;         // FIX: запоминаем текущий URL
-let streamRefreshTimer = null;  // FIX: таймер обновления
+let currentM3u8 = null;
+let streamRefreshTimer = null;
 
 async function loadStream(forceReload = false) {
   const diagStream = document.getElementById('diagStream');
   const adminStatus = document.getElementById('adminStreamStatus');
   const empty = document.getElementById('videoEmpty');
-  const video = document.getElementById('player');
   const providerDisplay = document.getElementById('provider-name');
 
   const streamData = await fetchJSON(`${BACKEND}/api/stream.json`);
@@ -229,10 +228,7 @@ async function loadStream(forceReload = false) {
     return;
   }
 
-  // FIX Вариант 1: если URL не изменился и не форсим — не перезапускаем hls
-  if (!forceReload && streamData.m3u8 === currentM3u8 && hls) {
-    return;
-  }
+  if (!forceReload && streamData.m3u8 === currentM3u8 && vjsPlayer) return;
 
   currentM3u8 = streamData.m3u8;
 
@@ -243,59 +239,35 @@ async function loadStream(forceReload = false) {
   const pulse = document.getElementById('streamPulse');
   if (pulse) pulse.classList.add('live');
 
-  // FIX Вариант 2: для CORS-friendly источников — прямой URL без бэкенда
-  const isCORSFriendly = CORS_FRIENDLY.some(s => (streamData.provider || '').toLowerCase().includes(s));
-
-  if (window.Hls && Hls.isSupported()) {
-    if (hls) hls.destroy();
-    hls = new Hls({
-      // FIX: агрессивнее переподключаться для живых потоков
-      liveSyncDurationCount: 3,
-      liveMaxLatencyDurationCount: 10,
-      manifestLoadingMaxRetry: 6,
-      levelLoadingMaxRetry: 6,
-      fragLoadingMaxRetry: 6,
-    });
-
-    hls.loadSource(currentM3u8);
-    hls.attachMedia(video);
-
-    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      video.play().catch(() => {});
-      empty.classList.add('hidden');
-    });
-
-    // FIX: hlsErr вместо data — чтобы не затирать внешний streamData
-    hls.on(Hls.Events.ERROR, (event, hlsErr) => {
-      console.error('HLS error:', hlsErr.type, hlsErr.details, hlsErr.fatal);
-      if (hlsErr.fatal) {
-        switch (hlsErr.type) {
-          case Hls.ErrorTypes.NETWORK_ERROR:
-            console.warn('Сетевая ошибка — пробуем восстановить...');
-            hls.startLoad();
-            break;
-          case Hls.ErrorTypes.MEDIA_ERROR:
-            console.warn('Медиа ошибка — recoverMediaError...');
-            hls.recoverMediaError();
-            break;
-          default:
-            // Фатально — перезапускаем через 5 сек
-            console.error('Фатальная ошибка — перезапуск через 5с');
-            setTimeout(() => loadStream(true), 5000);
-            break;
+  if (!vjsPlayer) {
+    vjsPlayer = videojs('player', {
+      techOrder: ['html5'],
+      html5: {
+        hls: {
+          overrideNative: true,
+          enableLowInitialPlaylist: true,
+          smoothQualityChange: true,
         }
-      }
+      },
+      liveui: true,
+      controls: true,
+      autoplay: true,
+      muted: false,
     });
 
-  } else {
-    // Safari / нативный HLS
-    video.src = currentM3u8;
-    video.play().then(() => {
+    vjsPlayer.on('error', () => {
+      console.error('Video.js error:', vjsPlayer.error());
+      setTimeout(() => loadStream(true), 5000);
+    });
+
+    vjsPlayer.on('playing', () => {
       empty.classList.add('hidden');
-    }).catch(() => {});
+    });
   }
 
-  // FIX Вариант 1: переспрашиваем бэкенд каждые 30 сек для обновления URL
+  vjsPlayer.src({ src: currentM3u8, type: 'application/x-mpegURL' });
+  vjsPlayer.play().catch(() => {});
+
   if (streamRefreshTimer) clearInterval(streamRefreshTimer);
   streamRefreshTimer = setInterval(() => loadStream(false), 30000);
 }
