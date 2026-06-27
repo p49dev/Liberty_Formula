@@ -1,7 +1,7 @@
 /* ════════════════════════════════════════════════════════
    LIBERTY FORMULA — style.css v2.0
    Две темы: Dark (F1 Official) + Light (Scandinavian)
-   Переключатель через body[data-theme="light"]
+   Переключатель через body[data-theme="light"], html[data-theme="light"]
    ════════════════════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Syne:wght@700;800&display=swap');
@@ -40,7 +40,7 @@
   --clr-sauber:   #52e252;
   --clr-rb:       #6692ff;
 
-  --display: 'Syne', sans-serif;
+  --display: 'Barlow Condensed', sans-serif;
   --body:    'Inter', sans-serif;
   --mono:    'JetBrains Mono', monospace;
 
@@ -52,7 +52,7 @@
 }
 
 /* ─── LIGHT THEME (Scandinavian) ───────────────────────── */
-body[data-theme="light"] {
+body[data-theme="light"], html[data-theme="light"] {
   --bg:        #f5f5f0;
   --bg-2:      #ebebе6;
   --panel:     #ffffff;
@@ -77,13 +77,13 @@ body[data-theme="light"] {
 }
 
 /* В светлой теме красный акцент остаётся для F1 элементов */
-body[data-theme="light"] .live-dot,
-body[data-theme="light"] .live-chip { color:#c00500; border-color:rgba(192,5,0,0.2); background:rgba(192,5,0,0.05); }
-body[data-theme="light"] .live-dot { background:#c00500; box-shadow:0 0 6px rgba(192,5,0,0.4); }
-body[data-theme="light"] .role-btn.active { background:#1a1a18; color:#fff; }
-body[data-theme="light"] .filter-tag:hover,
-body[data-theme="light"] .filter-tag.active { background:#1a1a18; border-color:#1a1a18; color:#fff; }
-body[data-theme="light"] .news-row.alert { background:rgba(192,5,0,0.03); border-color:rgba(192,5,0,0.12); }
+body[data-theme="light"], html[data-theme="light"] .live-dot,
+body[data-theme="light"], html[data-theme="light"] .live-chip { color:#c00500; border-color:rgba(192,5,0,0.2); background:rgba(192,5,0,0.05); }
+body[data-theme="light"], html[data-theme="light"] .live-dot { background:#c00500; box-shadow:0 0 6px rgba(192,5,0,0.4); }
+body[data-theme="light"], html[data-theme="light"] .role-btn.active { background:#1a1a18; color:#fff; }
+body[data-theme="light"], html[data-theme="light"] .filter-tag:hover,
+body[data-theme="light"], html[data-theme="light"] .filter-tag.active { background:#1a1a18; border-color:#1a1a18; color:#fff; }
+body[data-theme="light"], html[data-theme="light"] .news-row.alert { background:rgba(192,5,0,0.03); border-color:rgba(192,5,0,0.12); }
 
 /* ─── BASE ─────────────────────────────────────────────── */
 html { background:var(--bg); }
@@ -131,14 +131,14 @@ body[data-role="admin"] td.role-commentator-only { display:table-cell; }
   background:var(--panel-2); border:1px solid var(--border);
   position:relative; transition:background 0.2s;
 }
-body[data-theme="light"] .theme-toggle-track { background:#1a1a18; }
+body[data-theme="light"], html[data-theme="light"] .theme-toggle-track { background:#1a1a18; }
 
 .theme-toggle-thumb {
   position:absolute; top:2px; left:2px;
   width:12px; height:12px; border-radius:50%;
   background:var(--text-mute); transition:all 0.2s;
 }
-body[data-theme="light"] .theme-toggle-thumb {
+body[data-theme="light"], html[data-theme="light"] .theme-toggle-thumb {
   transform:translateX(14px); background:#fff;
 }
 
@@ -201,7 +201,7 @@ body[data-theme="light"] .theme-toggle-thumb {
   white-space:nowrap;
 }
 .role-btn.active { background:var(--accent); color:#fff; }
-body[data-theme="light"] .role-btn.active { background:#1a1a18; }
+body[data-theme="light"], html[data-theme="light"] .role-btn.active { background:#1a1a18; }
 
 .session-chip {
   font-family:var(--mono); font-size:10.5px; color:var(--text-dim);
@@ -440,8 +440,8 @@ body[data-theme="light"] .role-btn.active { background:#1a1a18; }
   font-size:10.5px; padding:4px 11px; border-radius:14px; cursor:pointer; transition:0.15s;
 }
 .filter-tag:hover, .filter-tag.active { background:#e10600; border-color:#e10600; color:#fff; }
-body[data-theme="light"] .filter-tag:hover,
-body[data-theme="light"] .filter-tag.active { background:#1a1a18; border-color:#1a1a18; }
+body[data-theme="light"], html[data-theme="light"] .filter-tag:hover,
+body[data-theme="light"], html[data-theme="light"] .filter-tag.active { background:#1a1a18; border-color:#1a1a18; }
 
 .news-rows { padding:10px; display:flex; flex-direction:column; gap:7px; max-height:340px; overflow-y:auto; }
 .news-row {
@@ -483,4 +483,8 @@ body[data-theme="light"] .filter-tag.active { background:#1a1a18; border-color:#
 @media (max-width:959px) {
   .session-chip { order:2; }
   .theme-toggle-label { display:none; }
-                                                 }
+}
+
+html[data-theme="light"], body[data-theme="light"] {
+  --display: 'Inter', sans-serif;
+   }
