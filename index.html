@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Liberty Formula — Pit Wall</title>
 <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&family=Archivo+Black&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=5.0">
+<link rel="stylesheet" href="style.css?v=6.0">
 </head>
 <body>
 
@@ -79,7 +79,6 @@
 
     <div class="video-panel">
       <div class="video-box" id="video-box">
-        <!-- Видео-элемент для hls.js -->
         <div id="player"></div>
         <div class="video-empty" id="videoEmpty">
           <div class="spinner"></div>
@@ -208,8 +207,24 @@
 
 </main>
 
-<!-- Чистый hls.js без наворотов -->
 <script src="https://cdn.jsdelivr.net/npm/@clappr/player@latest/dist/clappr.min.js"></script>
-<script src="app.js?v=5.0"></script>
+<script src="app.js?v=6.0"></script>
+
+<script>
+function toggleTheme() {
+  const isLight = document.body.dataset.theme === 'light';
+  document.body.dataset.theme = isLight ? '' : 'light';
+  localStorage.setItem('lf_theme', isLight ? 'dark' : 'light');
+  document.getElementById('themeLabel').textContent = isLight ? 'DARK' : 'LIGHT';
+}
+(function() {
+  const saved = localStorage.getItem('lf_theme');
+  if (saved === 'light') {
+    document.body.dataset.theme = 'light';
+    const lbl = document.getElementById('themeLabel');
+    if (lbl) lbl.textContent = 'LIGHT';
+  }
+})();
+</script>
 </body>
           </html>
