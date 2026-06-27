@@ -4,8 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Liberty Formula — Pit Wall</title>
-<link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&family=Archivo+Black&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=6.0">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Syne:wght@700;800&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=7.0">
+<script>
+// Применяем тему до рендера — без мигания
+(function() {
+  const t = localStorage.getItem('lf_theme');
+  if (t === 'light') document.documentElement.dataset.theme = 'light';
+})();
+</script>
 </head>
 <body>
 
@@ -28,6 +35,12 @@
       <button class="role-btn" data-role="admin" onclick="setRole('admin')">Админ</button>
     </div>
     <div class="session-chip" id="sessionChip">— загрузка сессии —</div>
+
+    <!-- КНОПКА ТЕМЫ -->
+    <button class="theme-toggle" onclick="toggleTheme()" title="Сменить тему">
+      <div class="theme-toggle-track"><div class="theme-toggle-thumb"></div></div>
+      <span class="theme-toggle-label" id="themeLabel">DARK</span>
+    </button>
   </div>
 </header>
 
@@ -43,29 +56,17 @@
     <h4>Календарь 2026</h4>
     <div class="cal-item done"><span class="cal-dot"></span>Бахрейн — 04.04</div>
     <div class="cal-item done"><span class="cal-dot"></span>Джидда — 18.04</div>
-    <div class="cal-item live"><span class="cal-dot"></span>Майами — 02.05</div>
-    <div class="cal-item"><span class="cal-dot"></span>Имола — 16.05</div>
-    <div class="cal-item"><span class="cal-dot"></span>Монако — 23.05</div>
+    <div class="cal-item live"><span class="cal-dot"></span>Австрия — 27.06</div>
+    <div class="cal-item"><span class="cal-dot"></span>Великобритания — 04.07</div>
+    <div class="cal-item"><span class="cal-dot"></span>Венгрия — 01.08</div>
   </div>
 
   <div class="sidebar-block">
     <h4>Сервер</h4>
-    <div class="diag-row">
-      <span>Railway (US)</span>
-      <span class="diag-pulse ok" id="diagRailway"></span>
-    </div>
-    <div class="diag-row">
-      <span>OpenF1 API</span>
-      <span class="diag-pulse ok" id="diagOpenF1"></span>
-    </div>
-    <div class="diag-row">
-      <span>RSS лента</span>
-      <span class="diag-pulse warn" id="diagRSS"></span>
-    </div>
-    <div class="diag-row">
-      <span>Stream proxy</span>
-      <span class="diag-pulse warn" id="diagStream"></span>
-    </div>
+    <div class="diag-row"><span>Railway (NL)</span><span class="diag-pulse ok" id="diagRailway"></span></div>
+    <div class="diag-row"><span>OpenF1 API</span><span class="diag-pulse ok" id="diagOpenF1"></span></div>
+    <div class="diag-row"><span>RSS лента</span><span class="diag-pulse warn" id="diagRSS"></span></div>
+    <div class="diag-row"><span>Stream proxy</span><span class="diag-pulse warn" id="diagStream"></span></div>
   </div>
 
   <div class="sidebar-foot">P4/9 · MIT License</div>
@@ -90,17 +91,14 @@
         </div>
       </div>
 
-      <!-- commentator-only control bar -->
       <div class="stream-bar role-commentator-only">
         <div class="stream-status">
           <span class="status-pulse" id="streamPulse"></span>
-          <span class="rtbf-label">Источник: <b id="streamSourceName">RTBF (BE)</b></span>
+          <span class="rtbf-label">Источник: <b id="streamSourceName">—</b></span>
         </div>
         <div class="stream-actions">
           <select class="select-mini" id="qualitySelect">
-            <option>1080p</option>
-            <option>720p</option>
-            <option>480p</option>
+            <option>1080p</option><option>720p</option><option>480p</option>
           </select>
           <div class="sync-mini">
             <button onclick="adjustSync(-0.5)">−0.5s</button>
@@ -110,7 +108,6 @@
         </div>
       </div>
 
-      <!-- audio source row, commentator only -->
       <div class="audio-row role-commentator-only">
         <span class="audio-label">Аудио:</span>
         <button class="audio-chip active" data-src="p49">P4/9 LIVE</button>
@@ -119,7 +116,6 @@
       </div>
     </div>
 
-    <!-- FIA notices, commentator + admin -->
     <div class="panel role-commentator-only role-admin-only">
       <div class="panel-head">
         <h2>FIA RACE CONTROL</h2>
@@ -130,7 +126,6 @@
       </div>
     </div>
 
-    <!-- admin diagnostics panel -->
     <div class="panel role-admin-only">
       <div class="panel-head"><h2>ДИАГНОСТИКА БЭКЕНДА</h2></div>
       <div class="admin-grid">
@@ -159,15 +154,15 @@
   <section class="col-data">
 
     <div class="podium-strip role-viewer-only" id="podiumStrip">
-      <div class="podium-cell p1"><span class="team-stripe"></span><span class="p-pos digits">1</span><span class="p-driver">—</span><span class="p-gap digits">—</span></div>
-      <div class="podium-cell p2"><span class="team-stripe"></span><span class="p-pos digits">2</span><span class="p-driver">—</span><span class="p-gap digits">—</span></div>
-      <div class="podium-cell p3"><span class="team-stripe"></span><span class="p-pos digits">3</span><span class="p-driver">—</span><span class="p-gap digits">—</span></div>
+      <div class="podium-cell p1"><span class="team-stripe"></span><span class="p-pos">1</span><span class="p-driver">—</span><span class="p-gap">—</span></div>
+      <div class="podium-cell p2"><span class="team-stripe"></span><span class="p-pos">2</span><span class="p-driver">—</span><span class="p-gap">—</span></div>
+      <div class="podium-cell p3"><span class="team-stripe"></span><span class="p-pos">3</span><span class="p-driver">—</span><span class="p-gap">—</span></div>
     </div>
 
     <div class="panel timing-panel">
       <div class="panel-head">
         <h2>LIVE TIMING</h2>
-        <span class="lap-chip" id="lapChip">— / —</span>
+        <span class="lap-chip digits" id="lapChip">— / —</span>
       </div>
       <div class="table-scroller">
         <table class="timing-table">
@@ -208,11 +203,11 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@clappr/player@latest/dist/clappr.min.js"></script>
-<script src="app.js?v=6.0"></script>
-
+<script src="app.js?v=7.0"></script>
 <script>
 function toggleTheme() {
-  const isLight = document.body.dataset.theme === 'light';
+  const isLight = document.documentElement.dataset.theme === 'light';
+  document.documentElement.dataset.theme = isLight ? '' : 'light';
   document.body.dataset.theme = isLight ? '' : 'light';
   localStorage.setItem('lf_theme', isLight ? 'dark' : 'light');
   document.getElementById('themeLabel').textContent = isLight ? 'DARK' : 'LIGHT';
@@ -227,4 +222,4 @@ function toggleTheme() {
 })();
 </script>
 </body>
-          </html>
+                                                                     </html>
