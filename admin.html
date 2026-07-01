@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liberty Formula — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=9.0">
+<style>
+  /* Дополнительные стили только для админки */
+  .login-screen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: var(--bg); padding: 20px;
+  }
+  .login-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 32px 28px; width: 100%; max-width: 360px;
+  }
+  .login-logo { font-family: var(--display); font-weight: 700; font-size: 14px; margin-bottom: 24px; }
+  .login-logo b { color: var(--accent); }
+  .login-title { font-family: var(--display); font-weight: 800; font-size: 20px; margin-bottom: 6px; }
+  .login-sub { font-size: 13px; color: var(--text-dim); margin-bottom: 28px; }
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .field label { font-size: 11.5px; font-weight: 600; color: var(--text-mute); text-transform: uppercase; letter-spacing: 0.5px; }
+  .field input {
+    background: var(--bg-2); border: 1px solid var(--border); color: var(--text);
+    font-family: var(--body); font-size: 14px; padding: 11px 14px;
+    border-radius: var(--radius-sm); outline: none; transition: border-color 0.15s;
+  }
+  .field input:focus { border-color: var(--text-mute); }
+  .login-btn {
+    width: 100%; background: var(--accent); color: #fff; border: none;
+    font-family: var(--display); font-weight: 800; font-size: 13px; letter-spacing: 0.5px;
+    padding: 13px; border-radius: var(--radius-sm); cursor: pointer;
+    margin-top: 8px; transition: opacity 0.15s;
+  }
+  .login-btn:hover { opacity: 0.88; }
+  .login-err { color: var(--accent); font-size: 12px; margin-top: 10px; display: none; }
+
+  .admin-screen { display: none; min-height: 100vh; background: var(--bg); }
+  .admin-screen.active { display: block; }
+
+  .admin-nav {
+    background: var(--panel); border-bottom: 1px solid var(--border);
+    padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .admin-nav .brand { font-family: var(--display); font-weight: 700; font-size: 13px; }
+  .admin-nav .brand b { color: var(--accent); }
+  .admin-badge {
+    background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(227,6,19,0.25);
+    font-family: var(--display); font-weight: 800; font-size: 10px; letter-spacing: 0.8px;
+    padding: 3px 9px; border-radius: 20px;
+  }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .logout-btn {
+    background: none; border: 1px solid var(--border); color: var(--text-dim);
+    font-size: 12px; padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer;
+  }
+  .back-link { font-size: 12.5px; color: var(--text-dim); text-decoration: none; }
+  .back-link:hover { color: var(--text); }
+
+  .admin-body { padding: 20px 16px; max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+
+  .a-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .a-card-head { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+  .a-card-title { font-family: var(--display); font-weight: 800; font-size: 13px; }
+  .a-card-sub { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
+  .a-card-body { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+
+  .a-field { display: flex; flex-direction: column; gap: 6px; }
+  .a-field label { font-size: 11px; font-weight: 600; color: var(--text-mute); text-transform: uppercase; letter-spacing: 0.5px; }
+  .a-field input, .a-field textarea, .a-field select {
+    background: var(--bg-2); border: 1px solid var(--border); color: var(--text);
+    font-family: var(--body); font-size: 13px; padding: 10px 13px;
+    border-radius: var(--radius-sm); outline: none; width: 100%; transition: border-color 0.15s;
+  }
+  .a-field input:focus, .a-field textarea:focus { border-color: var(--text-mute); }
+  .a-field textarea { resize: vertical; min-height: 80px; }
+
+  .a-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .a-row .a-field { flex: 1; min-width: 160px; }
+
+  .btn-primary {
+    background: var(--accent); color: #fff; border: none;
+    font-family: var(--display); font-weight: 800; font-size: 12px; letter-spacing: 0.5px;
+    padding: 10px 20px; border-radius: var(--radius-sm); cursor: pointer; transition: opacity 0.15s;
+    align-self: flex-start;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-secondary {
+    background: var(--bg-2); border: 1px solid var(--border); color: var(--text-dim);
+    font-size: 12px; padding: 10px 16px; border-radius: var(--radius-sm); cursor: pointer;
+    align-self: flex-start;
+  }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .feedback { font-size: 12px; color: var(--live); }
+  .feedback.err { color: var(--accent); }
+
+  .status-indicator {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg-2); padding: 10px 14px; border-radius: var(--radius-sm);
+    font-size: 12.5px; color: var(--text-dim);
+  }
+  .status-indicator .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-mute); }
+  .status-indicator.active .dot { background: var(--live); box-shadow: 0 0 6px var(--live); }
+  .status-indicator.active { color: var(--text); }
+
+  .card-toggle { display: flex; flex-direction: column; gap: 10px; }
+  .card-toggle-item {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg-2); padding: 12px 14px; border-radius: var(--radius-sm);
+    font-size: 13px;
+  }
+  .card-toggle-item span { color: var(--text-dim); }
+  .toggle-switch {
+    width: 36px; height: 20px; border-radius: 10px; background: var(--bg);
+    border: 1px solid var(--border); position: relative; cursor: pointer; flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .toggle-switch.on { background: var(--live); border-color: var(--live); }
+  .toggle-switch::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 14px; height: 14px; border-radius: 50%; background: var(--text-mute); transition: all 0.2s;
+  }
+  .toggle-switch.on::after { transform: translateX(16px); background: #fff; }
+</style>
+</head>
+<body>
+
+<!-- ══════ ЭКРАН ЛОГИНА ══════ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">LIBERTY<b>FORMULA</b></div>
+    <h1 class="login-title">Панель администратора</h1>
+    <p class="login-sub">Только для авторизованных пользователей</p>
+    <div class="field">
+      <label>Логин</label>
+      <input type="text" id="loginUser" placeholder="admin" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Пароль</label>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Войти</button>
+    <p class="login-err" id="loginErr">Неверный логин или пароль</p>
+  </div>
+</div>
+
+<!-- ══════ ЭКРАН АДМИНКИ ══════ -->
+<div class="admin-screen" id="adminScreen">
+
+  <nav class="admin-nav">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="brand">LIBERTY<b>FORMULA</b></div>
+      <span class="admin-badge">ADMIN</span>
+    </div>
+    <div class="nav-right">
+      <a class="back-link" href="index.html">← На сайт</a>
+      <button class="logout-btn" onclick="doLogout()">Выйти</button>
+    </div>
+  </nav>
+
+  <div class="admin-body">
+
+    <!-- Трансляция -->
+    <div class="a-card">
+      <div class="a-card-head">
+        <div class="a-card-title">Трансляция</div>
+        <div class="a-card-sub">Установи m3u8 ссылку — все зрители увидят поток через ~10 сек</div>
+      </div>
+      <div class="a-card-body">
+        <div class="status-indicator" id="streamStatus">
+          <span class="dot"></span><span id="streamStatusText">Поток не активен</span>
+        </div>
+        <div class="a-field">
+          <label>Ссылка на поток (m3u8)</label>
+          <input type="url" id="streamUrl" placeholder="https://example.com/stream.m3u8">
+        </div>
+        <div class="a-row">
+          <div class="a-field">
+            <label>Название источника</label>
+            <input type="text" id="streamProvider" placeholder="ServusTV, RTBF...">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" onclick="setStream()">▶ Запустить поток</button>
+          <button class="btn-secondary" onclick="clearStream()">Остановить</button>
+          <span class="feedback" id="streamFeedback"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Баннер-уведомление -->
+    <div class="a-card">
+      <div class="a-card-head">
+        <div class="a-card-title">Уведомление для всех</div>
+        <div class="a-card-sub">Появится в ленте у всех зрителей — тех.перерыв, важные новости</div>
+      </div>
+      <div class="a-card-body">
+        <div class="a-field">
+          <label>Текст уведомления</label>
+          <textarea id="bannerText" placeholder="Технический перерыв — вернёмся через 30 минут"></textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" onclick="setBanner()">Опубликовать</button>
+          <button class="btn-secondary" onclick="clearBanner()">Убрать баннер</button>
+          <span class="feedback" id="bannerFeedback"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Карточки в ленте -->
+    <div class="a-card">
+      <div class="a-card-head">
+        <div class="a-card-title">Карточки в ленте</div>
+        <div class="a-card-sub">Скрыть или закрепить модули для всех зрителей</div>
+      </div>
+      <div class="a-card-body">
+        <div class="card-toggle">
+          <div class="card-toggle-item">
+            <span>🏆 Подиум</span>
+            <div class="toggle-switch on" id="togglePodium" onclick="toggleCard('podium', this)"></div>
+          </div>
+          <div class="card-toggle-item">
+            <span>⏱ Live Timing</span>
+            <div class="toggle-switch on" id="toggleTiming" onclick="toggleCard('timing', this)"></div>
+          </div>
+          <div class="card-toggle-item">
+            <span>📰 Новости</span>
+            <div class="toggle-switch on" id="toggleNews" onclick="toggleCard('news', this)"></div>
+          </div>
+          <div class="card-toggle-item">
+            <span>🏁 FIA Race Control</span>
+            <div class="toggle-switch on" id="toggleFia" onclick="toggleCard('fia', this)"></div>
+          </div>
+        </div>
+        <span class="feedback" id="cardsFeedback"></span>
+      </div>
+    </div>
+
+    <!-- Диагностика -->
+    <div class="a-card">
+      <div class="a-card-head">
+        <div class="a-card-title">Диагностика</div>
+      </div>
+      <div class="a-card-body" id="diagBody">
+        <div style="color:var(--text-mute); font-size:13px;">Загрузка…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const BACKEND = 'https://libertyformula-production-a845.up.railway.app';
+
+/* ── LOGIN ── */
+const ADMIN_USER = 'kimi';
+const ADMIN_PASS = 'BWOAH 2026';
+
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  if (u === ADMIN_USER && p === ADMIN_PASS) {
+    sessionStorage.setItem('lf_admin', '1');
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminScreen').classList.add('active');
+    initAdmin();
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('loginScreen').style.display !== 'none')
+    doLogin();
+});
+
+function doLogout() {
+  sessionStorage.removeItem('lf_admin');
+  document.getElementById('adminScreen').classList.remove('active');
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+// Автовход если уже авторизован в этой сессии
+if (sessionStorage.getItem('lf_admin')) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminScreen').classList.add('active');
+  initAdmin();
+}
+
+/* ── STREAM ── */
+async function setStream() {
+  const url      = document.getElementById('streamUrl').value.trim();
+  const provider = document.getElementById('streamProvider').value.trim();
+  const fb       = document.getElementById('streamFeedback');
+  if (!url) { fb.textContent = 'Введи ссылку'; fb.className = 'feedback err'; return; }
+  fb.textContent = '…';
+  const r = await fetch(`${BACKEND}/api/admin/stream`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ url, provider: provider || 'IPTV' }),
+  });
+  const d = await r.json();
+  if (d.status === 'ok') {
+    fb.textContent = '✓ Поток установлен'; fb.className = 'feedback';
+    updateStreamStatus(true, url);
+  } else {
+    fb.textContent = 'Ошибка'; fb.className = 'feedback err';
+  }
+}
+
+async function clearStream() {
+  await fetch(`${BACKEND}/api/admin/stream`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ url: '' }),
+  });
+  document.getElementById('streamFeedback').textContent = 'Поток остановлен';
+  document.getElementById('streamFeedback').className = 'feedback';
+  updateStreamStatus(false, '');
+}
+
+function updateStreamStatus(active, url) {
+  const el   = document.getElementById('streamStatus');
+  const text = document.getElementById('streamStatusText');
+  el.className = active ? 'status-indicator active' : 'status-indicator';
+  text.textContent = active ? `Активен · ${url.slice(0,50)}…` : 'Поток не активен';
+}
+
+/* ── BANNER ── */
+async function setBanner() {
+  const text = document.getElementById('bannerText').value.trim();
+  const fb   = document.getElementById('bannerFeedback');
+  if (!text) { fb.textContent = 'Введи текст'; fb.className = 'feedback err'; return; }
+  await fetch(`${BACKEND}/api/admin/banner`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ text }),
+  });
+  fb.textContent = '✓ Опубликовано'; fb.className = 'feedback';
+}
+
+async function clearBanner() {
+  await fetch(`${BACKEND}/api/admin/banner`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ text: '' }),
+  });
+  document.getElementById('bannerFeedback').textContent = 'Баннер убран';
+  document.getElementById('bannerFeedback').className = 'feedback';
+}
+
+/* ── CARDS TOGGLE ── */
+const cardState = { podium: true, timing: true, news: true, fia: true };
+
+async function toggleCard(name, el) {
+  cardState[name] = !cardState[name];
+  el.classList.toggle('on', cardState[name]);
+  await fetch(`${BACKEND}/api/admin/cards`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(cardState),
+  });
+  document.getElementById('cardsFeedback').textContent = '✓ Сохранено';
+}
+
+/* ── DIAG ── */
+async function loadDiag() {
+  const body = document.getElementById('diagBody');
+  try {
+    const [state, feed] = await Promise.all([
+      fetch(`${BACKEND}/api/state.json`).then(r => r.json()),
+      fetch(`${BACKEND}/api/feed.json`).then(r => r.json()),
+    ]);
+    body.innerHTML = `
+      <div class="status-indicator ${state?.stream?.active ? 'active' : ''}">
+        <span class="dot"></span>
+        <span>Трансляция: ${state?.stream?.active ? 'активна' : 'нет потока'}</span>
+      </div>
+      <div class="status-indicator active">
+        <span class="dot"></span>
+        <span>RSS: ${feed?.length ? feed.length + ' новостей' : 'нет данных'}</span>
+      </div>
+      <div class="status-indicator active">
+        <span class="dot"></span>
+        <span>Бэкенд: онлайн</span>
+      </div>
+    `;
+  } catch {
+    body.innerHTML = '<div class="status-indicator"><span class="dot"></span><span>Бэкенд недоступен</span></div>';
+  }
+}
+
+function initAdmin() {
+  loadDiag();
+  // Загружаем текущий статус потока
+  fetch(`${BACKEND}/api/stream.json`).then(r => r.json()).then(d => {
+    if (d?.m3u8) {
+      document.getElementById('streamUrl').value = d.m3u8;
+      document.getElementById('streamProvider').value = d.provider || '';
+      updateStreamStatus(true, d.m3u8);
+    }
+  }).catch(() => {});
+}
+</script>
+</body>
+  </html>
