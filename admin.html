@@ -184,6 +184,19 @@
             <input type="text" id="streamProvider" placeholder="ServusTV, RTBF...">
           </div>
         </div>
+        <div class="a-field">
+          <label>Плеер (движок)</label>
+          <select id="streamEngine">
+            <option value="auto">🤖 AUTO — умный выбор</option>
+            <option value="shaka">⚡ Shaka Player — DASH/HLS премиум</option>
+            <option value="clappr">📺 Clappr — проверенный HLS</option>
+            <option value="native">🌐 Native HTML5 — максимальная совместимость</option>
+          </select>
+        </div>
+        <div class="status-indicator" id="engineStatus">
+          <span class="dot"></span>
+          <span>Активный движок: <b id="engineIndicatorAdmin">—</b></span>
+        </div>
         <div class="btn-row">
           <button class="btn-primary" onclick="setStream()">▶ Запустить поток</button>
           <button class="btn-secondary" onclick="clearStream()">Остановить</button>
@@ -257,8 +270,8 @@
 const BACKEND = 'https://libertyformula-production-a845.up.railway.app';
 
 /* ── LOGIN ── */
-const ADMIN_USER = 'kimi';
-const ADMIN_PASS = 'BWOAH 2026';
+const ADMIN_USER = 'Kimi';
+const ADMIN_PASS =  'BWOAH 2026';
 
 function doLogin() {
   const u = document.getElementById('loginUser').value.trim();
@@ -300,7 +313,7 @@ async function setStream() {
   fb.textContent = '…';
   const r = await fetch(`${BACKEND}/api/admin/stream`, {
     method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ url, provider: provider || 'IPTV' }),
+    body: JSON.stringify({ url, provider: provider || 'IPTV', engine: document.getElementById('streamEngine')?.value || 'auto' }),
   });
   const d = await r.json();
   if (d.status === 'ok') {
@@ -402,4 +415,4 @@ function initAdmin() {
 }
 </script>
 </body>
-  </html>
+              </html>
