@@ -184,134 +184,251 @@ async function refreshBanner() {
 refreshBanner();
 setInterval(refreshBanner, 30000);
 
-/* ─── IPTV PLAYER ──────────────────────────────────── */
-let player    = null;
-let activeUrl = null;
-let pollTimer = null;
+/* ─── SMART PLAYER ENGINE ─────────────────────────── */
+/*
+  Цепочка фолбэков: Shaka → Clappr → Native HTML5
+  Автоопределение формата по URL (.mpd = DASH, иначе HLS)
+  Мгновенное переключение плеера без перезагрузки
+*/
+
+let player        = null;
+let activeUrl     = null;
+let activeEngine  = null; // 'shaka' | 'clappr' | 'native'
+let forcedEngine  = null; // null = AUTO, или принудительный выбор
+let pollTimer     = null;
+let reconnectTimer = null;
+let reconnectDelay = 3000;
+let bufferHealth  = 0;
+let healthTimer   = null;
 
 function showEmpty(show) {
   const el = document.getElementById('videoEmpty');
   if (el) el.classList.toggle('hidden', !show);
 }
 
-function initPlayer(m3u8) {
-  // Если плеер уже создан — просто меняем источник
+function setEngineIndicator(engine) {
+  activeEngine = engine;
+  // Сообщаем админке
+  const indicator = document.getElementById('engineIndicator');
+  if (indicator) indicator.textContent = engine?.toUpperCase() || 'AUTO';
+}
+
+function detectFormat(url) {
+  if (!url) return 'hls';
+  if (url.includes('.mpd') || url.includes('dash')) return 'dash';
+  return 'hls';
+}
+
+function chooseEngine(url, preferred) {
+  if (preferred && preferred !== 'auto') return preferred;
+  const fmt = detectFormat(url);
+  // DASH → Shaka лучше, HLS → Clappr проверен
+  return fmt === 'dash' ? 'shaka' : 'clappr';
+}
+
+/* ── Уничтожить активный плеер ── */
+function destroyPlayer() {
+  clearTimeout(reconnectTimer);
+  clearInterval(healthTimer);
   if (player) {
     try {
-      player.src({ src: m3u8, type: 'application/x-mpegURL' });
-      player.load();
-      player.play().catch(() => { player.muted(true); player.play().catch(() => {}); });
-      showEmpty(false);
-      return;
-    } catch(e) {
-      console.warn('src swap failed, reinit:', e);
-      try { player.dispose(); } catch(e2) {}
-      player = null;
-    }
+      if (activeEngine === 'shaka') player.destroy();
+      else if (activeEngine === 'clappr') player.destroy();
+    } catch(e) {}
+    player = null;
+  }
+  const box = document.getElementById('player');
+  if (box) box.innerHTML = '';
+  setEngineIndicator(null);
+}
+
+/* ── Shaka Player ── */
+async function initShaka(m3u8) {
+  shaka.polyfill.installAll();
+  if (!shaka.Player.isBrowserSupported()) {
+    console.warn('Shaka not supported, falling back to Clappr');
+    return initClappr(m3u8);
   }
 
-  // Первый запуск — восстанавливаем video элемент если его нет
-  let videoEl = document.getElementById('player');
-  if (!videoEl || videoEl.tagName !== 'VIDEO') {
-    const box = document.getElementById('video-box');
-    if (videoEl) videoEl.remove();
-    videoEl = document.createElement('video');
-    videoEl.id = 'player';
-    videoEl.className = 'video-js vjs-default-skin';
-    videoEl.setAttribute('playsinline', '');
-    const empty = document.getElementById('videoEmpty');
-    box.insertBefore(videoEl, empty);
-  }
+  const box = document.getElementById('player');
+  box.innerHTML = '';
+  const video = document.createElement('video');
+  video.id = 'videoEl';
+  video.autoplay = true;
+  video.controls = true;
+  video.playsInline = true;
+  video.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;background:#000;';
+  box.appendChild(video);
+
+  const shakaPlayer = new shaka.Player(video);
+
+  // Конфиг Shaka для живых потоков
+  shakaPlayer.configure({
+    streaming: {
+      lowLatencyMode: true,
+      inaccurateManifestTolerance: 0,
+      rebufferingGoal: 2,
+      bufferingGoal: 10,
+    },
+    manifest: { retryParameters: { maxAttempts: 6, baseDelay: 1000 } },
+    drm: {},
+  });
+
+  shakaPlayer.addEventListener('error', (e) => {
+    console.error('Shaka error:', e.detail.code, e.detail.message);
+    console.warn('Shaka failed — falling back to Clappr');
+    destroyPlayer();
+    setTimeout(() => initClappr(m3u8), 500);
+  });
 
   try {
-    player = videojs('player', {
-      autoplay: true,
-      controls: true,
-      preload: 'auto',
-      fluid: false,
-      fill: true,
-      liveui: true,
-      html5: {
-        vhs: {
-          overrideNative: true,           // важно для Android Chrome
-          enableLowInitialPlaylist: true, // быстрый старт
-          smoothQualityChange: true,
-          allowSeeksWithinUnsafeLiveWindow: true,
-          handlePartialData: true,
-        },
-        nativeAudioTracks: false,
-        nativeVideoTracks: false,
-      },
-    });
-
-    // Загружаем источник
-    player.src({ src: m3u8, type: 'application/x-mpegURL' });
-
-    // Успешное воспроизведение
-    player.on('playing', () => {
-      showEmpty(false);
-      const onair = document.getElementById('onairChip');
-      if (onair) { onair.className='onair live'; onair.innerHTML='<i></i>LIVE'; }
-    });
-
-    // Плеер готов — пробуем играть
-    player.on('ready', () => {
-      player.play().catch(err => {
-        // Autoplay заблокирован браузером — включаем muted и пробуем снова
-        console.warn('Autoplay blocked, trying muted:', err);
-        player.muted(true);
-        player.play().catch(e => console.error('Muted play failed:', e));
-      });
-    });
-
-    // Ошибки плеера
-    player.on('error', () => {
-      const err = player.error();
-      console.error('Video.js error:', err?.code, err?.message);
-
-      // Код 2 = сеть, код 3 = декодирование, код 4 = источник не поддерживается
-      if (err?.code === 2) {
-        // Сетевая ошибка — ждём и перезапрашиваем URL (он мог протухнуть)
-        console.warn('Network error — refreshing stream in 5s');
-        setTimeout(() => { activeUrl = null; pollStream(); }, 5000);
-      } else if (err?.code === 3) {
-        // Ошибка декодирования — пробуем перезагрузить
-        console.warn('Decode error — reloading source');
-        player.src({ src: m3u8, type: 'application/x-mpegURL' });
-        player.load();
-        player.play().catch(() => {});
-      } else {
-        // Другая ошибка — через 6 сек перезапускаем полностью
-        console.warn('Fatal error — reinitializing in 6s');
-        setTimeout(() => { activeUrl = null; pollStream(); }, 6000);
-      }
-    });
-
-    // Стол — видео застряло (stalled > 10 сек)
-    let stallTimer = null;
-    player.on('stalled', () => {
-      clearTimeout(stallTimer);
-      stallTimer = setTimeout(() => {
-        console.warn('Stream stalled — trying to recover');
-        player.load();
-        player.play().catch(() => {});
-      }, 10000);
-    });
-    player.on('playing', () => clearTimeout(stallTimer));
-
-    // Страховка — убираем спиннер через 4 сек
-    setTimeout(() => showEmpty(false), 4000);
-
+    await shakaPlayer.load(m3u8);
+    video.play().catch(() => { video.muted = true; video.play().catch(() => {}); });
+    showEmpty(false);
+    player = shakaPlayer;
+    setEngineIndicator('shaka');
+    startHealthMonitor(video);
+    reconnectDelay = 3000; // сбрасываем задержку при успехе
   } catch(e) {
-    console.error('Video.js init failed:', e);
-    // Фолбэк на нативный HTML5 если Video.js сломался
-    const fallback = document.getElementById('player');
-    if (fallback) {
-      fallback.src = m3u8;
-      fallback.play().catch(() => {});
-      showEmpty(false);
-    }
+    console.error('Shaka load failed:', e);
+    console.warn('Shaka load failed — falling back to Clappr');
+    destroyPlayer();
+    setTimeout(() => initClappr(m3u8), 500);
   }
+}
+
+/* ── Clappr ── */
+function initClappr(m3u8) {
+  const box = document.getElementById('player');
+  if (!box) return;
+  box.innerHTML = '';
+
+  const clapprPlayer = new Clappr.Player({
+    source:   m3u8,
+    parentId: '#player',
+    width:    '100%',
+    height:   '100%',
+    autoPlay: true,
+    hlsjsConfig: {
+      enableWorker:                true,
+      liveSyncDurationCount:       3,
+      liveMaxLatencyDurationCount: 10,
+      manifestLoadingMaxRetry:     8,
+      fragLoadingMaxRetry:         8,
+    },
+    events: {
+      onPlay() {
+        showEmpty(false);
+        reconnectDelay = 3000;
+        const v = document.querySelector('#player video');
+        if (v) startHealthMonitor(v);
+      },
+      onReady() {
+        showEmpty(false);
+        clapprPlayer.play();
+      },
+      onError(e) {
+        console.error('Clappr error:', e);
+        console.warn('Clappr failed — falling back to Native');
+        destroyPlayer();
+        setTimeout(() => initNative(m3u8), 500);
+      },
+    },
+  });
+
+  player = clapprPlayer;
+  setEngineIndicator('clappr');
+  setTimeout(() => showEmpty(false), 3000);
+}
+
+/* ── Native HTML5 (последний рубеж) ── */
+function initNative(m3u8) {
+  const box = document.getElementById('player');
+  if (!box) return;
+  box.innerHTML = '';
+
+  const video = document.createElement('video');
+  video.autoplay = true;
+  video.controls = true;
+  video.playsInline = true;
+  video.src = m3u8;
+  video.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;background:#000;';
+  box.appendChild(video);
+
+  video.addEventListener('canplay', () => {
+    showEmpty(false);
+    video.play().catch(() => { video.muted = true; video.play().catch(() => {}); });
+    reconnectDelay = 3000;
+  });
+  video.addEventListener('error', () => {
+    console.error('Native video error — all engines failed');
+    // Все плееры упали — ждём и перезапрашиваем URL
+    scheduleReconnect(m3u8);
+  });
+  video.addEventListener('stalled', () => scheduleReconnect(m3u8));
+
+  player = { destroy: () => { video.src = ''; video.remove(); } };
+  setEngineIndicator('native');
+  setTimeout(() => showEmpty(false), 4000);
+}
+
+/* ── Буферное здоровье потока ── */
+function startHealthMonitor(video) {
+  clearInterval(healthTimer);
+  healthTimer = setInterval(() => {
+    if (!video || video.paused) return;
+    try {
+      const buf = video.buffered;
+      if (buf.length > 0) {
+        bufferHealth = buf.end(buf.length - 1) - video.currentTime;
+        const indicator = document.getElementById('bufferBar');
+        if (indicator) {
+          const pct = Math.min(100, (bufferHealth / 10) * 100);
+          indicator.style.width = pct + '%';
+          indicator.style.background = pct > 50 ? 'var(--live)' : pct > 20 ? 'var(--yellow)' : 'var(--accent)';
+        }
+      }
+    } catch(e) {}
+  }, 1000);
+}
+
+/* ── Умный реконнект с экспоненциальной задержкой ── */
+function scheduleReconnect(m3u8) {
+  clearTimeout(reconnectTimer);
+  console.warn(`Reconnecting in ${reconnectDelay}ms...`);
+  reconnectTimer = setTimeout(() => {
+    activeUrl = null; // форсируем перезапрос URL
+    pollStream();
+    reconnectDelay = Math.min(reconnectDelay * 2, 30000); // макс 30 сек
+  }, reconnectDelay);
+}
+
+/* ── Главная точка входа ── */
+function initPlayer(m3u8) {
+  destroyPlayer();
+  const engine = chooseEngine(m3u8, forcedEngine);
+  console.log(`Starting engine: ${engine} for ${m3u8.slice(0, 60)}...`);
+
+  if (engine === 'shaka') {
+    initShaka(m3u8);
+  } else if (engine === 'clappr') {
+    initClappr(m3u8);
+  } else {
+    initNative(m3u8);
+  }
+}
+
+/* ── PiP (Picture in Picture) ── */
+async function togglePiP() {
+  const video = document.querySelector('#player video');
+  if (!video) return;
+  try {
+    if (document.pictureInPictureElement) {
+      await document.exitPictureInPicture();
+    } else {
+      await video.requestPictureInPicture();
+    }
+  } catch(e) { console.warn('PiP not supported:', e); }
 }
 
 async function pollStream() {
@@ -320,23 +437,27 @@ async function pollStream() {
   const srcName = document.getElementById('streamSourceName');
 
   if (!data?.m3u8 || data.status === 'offline') {
-    diag('diagStream','warn');
-    if (onair) { onair.className='onair'; onair.innerHTML='<i></i>ОЖИДАНИЕ'; }
+    diag('diagStream', 'warn');
+    if (onair)   { onair.className='onair'; onair.innerHTML='<i></i>ОЖИДАНИЕ'; }
     if (srcName) srcName.textContent = 'источник не выбран';
     return;
   }
 
-  diag('diagStream','ok');
-  if (onair) { onair.className='onair live'; onair.innerHTML='<i></i>LIVE'; }
+  diag('diagStream', 'ok');
+  if (onair)   { onair.className='onair live'; onair.innerHTML='<i></i>LIVE'; }
   if (srcName) srcName.textContent = data.provider || 'IPTV';
+
+  // Принудительный движок из настроек сервера
+  if (data.engine) forcedEngine = data.engine;
+
+  const proxyUrl = `${BACKEND}/api/proxy?url=${encodeURIComponent(data.m3u8)}`;
 
   if (data.m3u8 !== activeUrl) {
     activeUrl = data.m3u8;
-    // Заворачиваем через прокси — Railway обходит CORS за нас
-    const proxyUrl = `${BACKEND}/api/proxy?url=${encodeURIComponent(data.m3u8)}`;
     initPlayer(proxyUrl);
   }
 }
+
 pollStream();
 pollTimer = setInterval(pollStream, 10000);
 
