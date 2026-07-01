@@ -99,12 +99,8 @@ body[data-role="commentator"] td.role-commentator-only { display: table-cell; }
   overflow: hidden;
 }
 /* Video.js занимает весь контейнер */
-#player {
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-}
+#player { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
+#player .clappr-container, #player [data-player] { width: 100% !important; height: 100% !important; }
 
 .stage-top {
   position: absolute; top: 0; left: 0; right: 0; z-index: 5;
@@ -441,33 +437,14 @@ body[data-theme="light"] .filter-tag.active { background: var(--accent); border-
   .stage-video { max-height: 78vh; }
 }
 
-/* ─── VIDEO.JS OVERRIDE ────────────────────────────── */
-.video-js {
-  width: 100% !important;
-  height: 100% !important;
-  position: absolute !important;
-  inset: 0 !important;
-  background: #000 !important;
+/* ─── BUFFER HEALTH BAR ─────────────────────────────── */
+.buffer-track {
+  height: 2px; background: rgba(255,255,255,0.06);
+  position: relative; overflow: hidden;
 }
-.video-js .vjs-tech { width: 100% !important; height: 100% !important; }
-.video-js .vjs-control-bar {
-  background: linear-gradient(transparent, rgba(0,0,0,0.7)) !important;
-  height: 36px !important;
-}
-.video-js .vjs-play-progress { background: #e30613 !important; }
-.video-js .vjs-volume-level { background: #e30613 !important; }
-.video-js .vjs-load-progress { background: rgba(255,255,255,0.15) !important; }
-.video-js .vjs-big-play-button {
-  border: 2px solid rgba(255,255,255,0.4) !important;
-  background: rgba(0,0,0,0.5) !important;
-  border-radius: 50% !important;
-  width: 48px !important; height: 48px !important;
-  line-height: 46px !important;
-  top: 50% !important; left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  margin: 0 !important;
-}
-.video-js .vjs-big-play-button:hover { background: rgba(227,6,19,0.7) !important; }
-.video-js .vjs-live-control .vjs-live-display { font-family: var(--mono) !important; font-size: 10px !important; }
-.vjs-error .vjs-error-display { background: rgba(0,0,0,0.85) !important; }
-.vjs-error .vjs-error-display .vjs-modal-dialog-content { font-family: var(--body) !important; }
+.buffer-bar {
+  height: 100%; width: 0%;
+  background: var(--live);
+  transition: width 0.8s ease, background 0.3s;
+  border-radius: 0 1px 1px 0;
+   }
