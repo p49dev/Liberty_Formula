@@ -195,30 +195,56 @@ function showEmpty(show) {
 }
 
 function initPlayer(m3u8) {
+  // Убираем старый плеер
   if (player) { try { player.destroy(); } catch(e){} player = null; }
+
   const box = document.getElementById('player');
   if (!box) return;
   box.innerHTML = '';
 
-  player = new Clappr.Player({
-    source:   m3u8,
-    parentId: '#player',
-    width:    '100%',
-    height:   '100%',
-    autoPlay: true,
-    hlsjsConfig: {
+  const video = document.createElement('video');
+  video.id = 'videoEl';
+  video.controls = true;
+  video.autoplay = true;
+  video.playsInline = true;
+  video.style.cssText = 'width:100%;height:100%;display:block;background:#000;';
+  box.appendChild(video);
+
+  if (Hls.isSupported()) {
+    const hls = new Hls({
       enableWorker: true,
       liveSyncDurationCount: 3,
       liveMaxLatencyDurationCount: 10,
       manifestLoadingMaxRetry: 6,
       fragLoadingMaxRetry: 6,
-    },
-    events: {
-      onPlay()  { showEmpty(false); },
-      onReady() { showEmpty(false); player.play(); },
-      onError() { setTimeout(() => pollStream(), 6000); },
-    },
-  });
+    });
+    hls.loadSource(m3u8);
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      video.play().catch(() => {});
+      showEmpty(false);
+    });
+    hls.on(Hls.Events.ERROR, (e, data) => {
+      if (data.fatal) {
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+          hls.startLoad();
+        } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+          hls.recoverMediaError();
+        } else {
+          setTimeout(() => pollStream(), 6000);
+        }
+      }
+    });
+    player = hls;
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    // Safari нативный HLS
+    video.src = m3u8;
+    video.addEventListener('loadedmetadata', () => {
+      video.play().catch(() => {});
+      showEmpty(false);
+    });
+  }
+
   setTimeout(() => showEmpty(false), 3000);
 }
 
