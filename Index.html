@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liberty Formula</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=9.0">
+</head>
+<body>
+
+<!-- ════════════ STICKY PLAYER ════════════ -->
+<div class="stage" id="stage">
+  <div class="stage-video" id="video-box">
+    <div id="player"></div>
+    <div class="stage-empty" id="videoEmpty">
+      <div class="radar"><span></span><span></span><span></span></div>
+      <p>Поиск сигнала</p>
+    </div>
+    <div class="stage-hud" id="videoHud">
+      <span class="hud-pos" id="hudPos">P1</span>
+      <span class="hud-driver" id="hudDriver">—</span>
+    </div>
+    <div class="stage-top">
+      <button class="icon-btn" onclick="toggleSidebar()" aria-label="Меню">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 5h14M2 9h14M2 13h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+      <div class="brand">LIBERTY<b>FORMULA</b></div>
+      <button class="icon-btn" onclick="toggleTheme()" aria-label="Тема">
+        <svg id="themeIcon" width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36A5.39 5.39 0 0 1 12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="stage-bar">
+    <div class="stage-status">
+      <span class="onair" id="onairChip"><i></i>ОЖИДАНИЕ</span>
+      <span class="src-name" id="streamSourceName">источник не выбран</span>
+    </div>
+    <div class="role-pills">
+      <button class="role-pill active" data-role="viewer" onclick="setRole('viewer')">Зритель</button>
+      <button class="role-pill" data-role="commentator" onclick="setRole('commentator')">Комментатор</button>
+    </div>
+  </div>
+
+  <div class="stage-controls role-commentator-only">
+    <div class="sync-group">
+      <button onclick="adjustSync(-0.5)">−0.5s</button>
+      <span id="syncVal" class="mono">0.0s</span>
+      <button onclick="adjustSync(0.5)">+0.5s</button>
+    </div>
+    <div class="audio-group">
+      <button class="audio-chip active" data-src="p49">P4/9 LIVE</button>
+      <button class="audio-chip" data-src="redrace">RedRace</button>
+      <button class="audio-chip" data-src="fx">FX</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SIDEBAR ════════════ -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-head">
+    <span class="sidebar-title">LIBERTY<b>FORMULA</b></span>
+    <button class="sidebar-close" onclick="closeSidebar()">
+      <svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <div class="sidebar-block">
+    <h4>Календарь сезона</h4>
+    <div class="cal-item done"><span class="cal-dot"></span>Бахрейн<time>04.04</time></div>
+    <div class="cal-item done"><span class="cal-dot"></span>Джидда<time>18.04</time></div>
+    <div class="cal-item live"><span class="cal-dot"></span>Австрия<time>27.06</time></div>
+    <div class="cal-item"><span class="cal-dot"></span>Британия<time>04.07</time></div>
+    <div class="cal-item"><span class="cal-dot"></span>Венгрия<time>01.08</time></div>
+  </div>
+
+  <div class="sidebar-block">
+    <h4>Состояние системы</h4>
+    <div class="diag-row"><span>Сервер</span><span class="diag-pulse ok" id="diagRailway"></span></div>
+    <div class="diag-row"><span>OpenF1</span><span class="diag-pulse ok" id="diagOpenF1"></span></div>
+    <div class="diag-row"><span>Новости</span><span class="diag-pulse warn" id="diagRSS"></span></div>
+    <div class="diag-row"><span>Трансляция</span><span class="diag-pulse warn" id="diagStream"></span></div>
+  </div>
+
+  <a class="sidebar-admin-link" href="admin.html">Панель администратора →</a>
+  <div class="sidebar-foot">P4/9 · Open Source · MIT</div>
+</aside>
+
+<!-- ════════════ FEED ════════════ -->
+<main class="feed" id="feed">
+
+  <div class="feed-banner" id="feedBanner" style="display:none;"></div>
+
+  <section class="card podium-card">
+    <div class="card-head"><span class="eyebrow">Подиум</span></div>
+    <div class="podium-row" id="podiumStrip">
+      <div class="pod-cell pod-1"><span class="pod-pos">1</span><span class="pod-name">—</span><span class="pod-gap mono">—</span></div>
+      <div class="pod-cell pod-2"><span class="pod-pos">2</span><span class="pod-name">—</span><span class="pod-gap mono">—</span></div>
+      <div class="pod-cell pod-3"><span class="pod-pos">3</span><span class="pod-name">—</span><span class="pod-gap mono">—</span></div>
+    </div>
+  </section>
+
+  <section class="card timing-card">
+    <div class="card-head">
+      <span class="eyebrow">Live Timing</span>
+      <span class="session-chip" id="sessionChip">загрузка сессии…</span>
+    </div>
+    <div class="table-scroller">
+      <table class="timing-table">
+        <thead><tr>
+          <th class="c">POS</th><th>ПИЛОТ</th><th>ОТРЫВ</th>
+          <th class="c role-commentator-only">ШИНЫ</th>
+        </tr></thead>
+        <tbody id="timingBody"><tr><td colspan="4" class="loading">Загрузка телеметрии…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card news-card">
+    <div class="card-head">
+      <span class="eyebrow">Новости</span>
+      <div class="filters">
+        <button class="filter-tag active" data-cat="all" onclick="filterNews('all')">Все</button>
+        <button class="filter-tag" data-cat="urgent" onclick="filterNews('urgent')">Срочно</button>
+        <button class="filter-tag" data-cat="analysis" onclick="filterNews('analysis')">Аналитика</button>
+      </div>
+    </div>
+    <div class="news-list" id="newsRows">
+      <div class="news-item"><span class="news-time mono">—</span><p>Лента подключается…</p></div>
+    </div>
+  </section>
+
+  <section class="card fia-card role-commentator-only">
+    <div class="card-head"><span class="eyebrow">FIA Race Control</span></div>
+    <div class="fia-list" id="fiaRows">
+      <div class="fia-item sys"><span class="mono">—</span><span>Ожидание уведомлений…</span></div>
+    </div>
+  </section>
+
+  <div class="feed-end">Это всё на сейчас — обнови позже</div>
+
+  <footer class="site-footer">
+    <a class="tg-link" href="https://t.me/P4Devl" target="_blank" rel="noopener">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21.5 4.5 18.9 19.2c-.2 1-.8 1.2-1.7.8l-4.7-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9L18 6.7c.4-.3-.1-.5-.6-.2L7.4 13.1l-4.8-1.5c-1-.3-1-1 .2-1.5l18.8-7.2c.8-.3 1.6.2 1.3 1.6z"/></svg>
+      <span>P4/9 Dev — канал разработчика</span>
+    </a>
+    <p class="footer-note">Liberty Formula держится на энтузиазме и кофе. Если нравится — загляни в канал, там жизнь проекта.</p>
+  </footer>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@clappr/player@latest/dist/clappr.min.js"></script>
+<script src="app.js?v=9.0"></script>
+</body>
+                                 </html>
