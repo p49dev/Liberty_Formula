@@ -1,8 +1,9 @@
 import feedparser
+import httpx
 from datetime import datetime
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 import uvicorn
 
 app = FastAPI(title="Liberty Formula API")
@@ -15,9 +16,28 @@ app.add_middleware(
 )
 
 # ─── STATE ─────────────────────────────────────────────
-stream  = {"url": None, "provider": None, "active": False}
-banner  = {"text": None}
-cards   = {"podium": True, "timing": True, "news": True, "fia": True}
+stream = {"url": None, "provider": None, "active": False}
+banner = {"text": None}
+cards  = {"podium": True, "timing": True, "news": True, "fia": True}
+
+# ─── PROXY ─────────────────────────────────────────────
+@app.get("/api/proxy")
+async def proxy(url: str):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+        "Referer": url,
+        "Origin":  "https://www.google.com",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
+            resp = await client.get(url, headers=headers)
+            return StreamingResponse(
+                resp.aiter_bytes(),
+                media_type=resp.headers.get("content-type", "application/vnd.apple.mpegurl"),
+                headers={"Access-Control-Allow-Origin": "*"},
+            )
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=502)
 
 # ─── STREAM ────────────────────────────────────────────
 @app.get("/api/stream.json")
