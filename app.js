@@ -240,7 +240,9 @@ async function pollStream() {
 
   if (data.m3u8 !== activeUrl) {
     activeUrl = data.m3u8;
-    initPlayer(activeUrl);
+    // Заворачиваем через прокси — Railway обходит CORS за нас
+    const proxyUrl = `${BACKEND}/api/proxy?url=${encodeURIComponent(data.m3u8)}`;
+    initPlayer(proxyUrl);
   }
 }
 pollStream();
