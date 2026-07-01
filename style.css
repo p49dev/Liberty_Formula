@@ -96,9 +96,15 @@ body[data-role="commentator"] td.role-commentator-only { display: table-cell; }
   aspect-ratio: 16/9;
   max-height: 56vh;
   background: #000;
+  overflow: hidden;
 }
-#player { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
-#player .clappr-container, #player [data-player] { width: 100% !important; height: 100% !important; }
+/* Video.js занимает весь контейнер */
+#player {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
 
 .stage-top {
   position: absolute; top: 0; left: 0; right: 0; z-index: 5;
