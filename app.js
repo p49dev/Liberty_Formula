@@ -195,57 +195,113 @@ function showEmpty(show) {
 }
 
 function initPlayer(m3u8) {
-  // Убираем старый плеер
-  if (player) { try { player.destroy(); } catch(e){} player = null; }
-
-  const box = document.getElementById('player');
-  if (!box) return;
-  box.innerHTML = '';
-
-  const video = document.createElement('video');
-  video.id = 'videoEl';
-  video.controls = true;
-  video.autoplay = true;
-  video.playsInline = true;
-  video.style.cssText = 'width:100%;height:100%;display:block;background:#000;';
-  box.appendChild(video);
-
-  if (Hls.isSupported()) {
-    const hls = new Hls({
-      enableWorker: true,
-      liveSyncDurationCount: 3,
-      liveMaxLatencyDurationCount: 10,
-      manifestLoadingMaxRetry: 6,
-      fragLoadingMaxRetry: 6,
-    });
-    hls.loadSource(m3u8);
-    hls.attachMedia(video);
-    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      video.play().catch(() => {});
-      showEmpty(false);
-    });
-    hls.on(Hls.Events.ERROR, (e, data) => {
-      if (data.fatal) {
-        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-          hls.startLoad();
-        } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-          hls.recoverMediaError();
-        } else {
-          setTimeout(() => pollStream(), 6000);
-        }
-      }
-    });
-    player = hls;
-  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    // Safari нативный HLS
-    video.src = m3u8;
-    video.addEventListener('loadedmetadata', () => {
-      video.play().catch(() => {});
-      showEmpty(false);
-    });
+  // Уничтожаем старый плеер если есть
+  if (player) {
+    try { player.dispose(); } catch(e) { console.warn('dispose error:', e); }
+    player = null;
   }
 
-  setTimeout(() => showEmpty(false), 3000);
+  // Video.js требует чистый video элемент после dispose
+  const box = document.getElementById('video-box');
+  const oldEl = document.getElementById('player');
+  if (oldEl) oldEl.remove();
+  const videoEl = document.createElement('video');
+  videoEl.id = 'player';
+  videoEl.className = 'video-js vjs-default-skin';
+  videoEl.setAttribute('playsinline', '');
+  // Вставляем перед stage-empty
+  const empty = document.getElementById('videoEmpty');
+  box.insertBefore(videoEl, empty);
+
+  try {
+    player = videojs('player', {
+      autoplay: true,
+      controls: true,
+      preload: 'auto',
+      fluid: false,
+      fill: true,
+      liveui: true,
+      html5: {
+        vhs: {
+          overrideNative: true,           // важно для Android Chrome
+          enableLowInitialPlaylist: true, // быстрый старт
+          smoothQualityChange: true,
+          allowSeeksWithinUnsafeLiveWindow: true,
+          handlePartialData: true,
+        },
+        nativeAudioTracks: false,
+        nativeVideoTracks: false,
+      },
+    });
+
+    // Загружаем источник
+    player.src({ src: m3u8, type: 'application/x-mpegURL' });
+
+    // Успешное воспроизведение
+    player.on('playing', () => {
+      showEmpty(false);
+      const onair = document.getElementById('onairChip');
+      if (onair) { onair.className='onair live'; onair.innerHTML='<i></i>LIVE'; }
+    });
+
+    // Плеер готов — пробуем играть
+    player.on('ready', () => {
+      player.play().catch(err => {
+        // Autoplay заблокирован браузером — включаем muted и пробуем снова
+        console.warn('Autoplay blocked, trying muted:', err);
+        player.muted(true);
+        player.play().catch(e => console.error('Muted play failed:', e));
+      });
+    });
+
+    // Ошибки плеера
+    player.on('error', () => {
+      const err = player.error();
+      console.error('Video.js error:', err?.code, err?.message);
+
+      // Код 2 = сеть, код 3 = декодирование, код 4 = источник не поддерживается
+      if (err?.code === 2) {
+        // Сетевая ошибка — ждём и перезапрашиваем URL (он мог протухнуть)
+        console.warn('Network error — refreshing stream in 5s');
+        setTimeout(() => { activeUrl = null; pollStream(); }, 5000);
+      } else if (err?.code === 3) {
+        // Ошибка декодирования — пробуем перезагрузить
+        console.warn('Decode error — reloading source');
+        player.src({ src: m3u8, type: 'application/x-mpegURL' });
+        player.load();
+        player.play().catch(() => {});
+      } else {
+        // Другая ошибка — через 6 сек перезапускаем полностью
+        console.warn('Fatal error — reinitializing in 6s');
+        setTimeout(() => { activeUrl = null; pollStream(); }, 6000);
+      }
+    });
+
+    // Стол — видео застряло (stalled > 10 сек)
+    let stallTimer = null;
+    player.on('stalled', () => {
+      clearTimeout(stallTimer);
+      stallTimer = setTimeout(() => {
+        console.warn('Stream stalled — trying to recover');
+        player.load();
+        player.play().catch(() => {});
+      }, 10000);
+    });
+    player.on('playing', () => clearTimeout(stallTimer));
+
+    // Страховка — убираем спиннер через 4 сек
+    setTimeout(() => showEmpty(false), 4000);
+
+  } catch(e) {
+    console.error('Video.js init failed:', e);
+    // Фолбэк на нативный HTML5 если Video.js сломался
+    const fallback = document.getElementById('player');
+    if (fallback) {
+      fallback.src = m3u8;
+      fallback.play().catch(() => {});
+      showEmpty(false);
+    }
+  }
 }
 
 async function pollStream() {
