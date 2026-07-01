@@ -16,7 +16,7 @@ app.add_middleware(
 )
 
 # ─── STATE ─────────────────────────────────────────────
-stream = {"url": None, "provider": None, "active": False}
+stream = {"url": None, "provider": None, "active": False, "engine": "auto"}
 banner = {"text": None}
 cards  = {"podium": True, "timing": True, "news": True, "fia": True}
 
@@ -51,6 +51,7 @@ async def set_stream(data: dict):
     url = data.get("url", "").strip()
     stream["url"]      = url or None
     stream["provider"] = data.get("provider", "IPTV").strip() if url else None
+    stream["engine"]   = data.get("engine", "auto") if url else "auto"
     stream["active"]   = bool(url)
     return {"status": "ok"}
 
