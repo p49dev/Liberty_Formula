@@ -195,23 +195,33 @@ function showEmpty(show) {
 }
 
 function initPlayer(m3u8) {
-  // Уничтожаем старый плеер если есть
+  // Если плеер уже создан — просто меняем источник
   if (player) {
-    try { player.dispose(); } catch(e) { console.warn('dispose error:', e); }
-    player = null;
+    try {
+      player.src({ src: m3u8, type: 'application/x-mpegURL' });
+      player.load();
+      player.play().catch(() => { player.muted(true); player.play().catch(() => {}); });
+      showEmpty(false);
+      return;
+    } catch(e) {
+      console.warn('src swap failed, reinit:', e);
+      try { player.dispose(); } catch(e2) {}
+      player = null;
+    }
   }
 
-  // Video.js требует чистый video элемент после dispose
-  const box = document.getElementById('video-box');
-  const oldEl = document.getElementById('player');
-  if (oldEl) oldEl.remove();
-  const videoEl = document.createElement('video');
-  videoEl.id = 'player';
-  videoEl.className = 'video-js vjs-default-skin';
-  videoEl.setAttribute('playsinline', '');
-  // Вставляем перед stage-empty
-  const empty = document.getElementById('videoEmpty');
-  box.insertBefore(videoEl, empty);
+  // Первый запуск — восстанавливаем video элемент если его нет
+  let videoEl = document.getElementById('player');
+  if (!videoEl || videoEl.tagName !== 'VIDEO') {
+    const box = document.getElementById('video-box');
+    if (videoEl) videoEl.remove();
+    videoEl = document.createElement('video');
+    videoEl.id = 'player';
+    videoEl.className = 'video-js vjs-default-skin';
+    videoEl.setAttribute('playsinline', '');
+    const empty = document.getElementById('videoEmpty');
+    box.insertBefore(videoEl, empty);
+  }
 
   try {
     player = videojs('player', {
