@@ -434,3 +434,34 @@ body[data-theme="light"] .filter-tag.active { background: var(--accent); border-
   body { display: grid; grid-template-columns: 1fr; }
   .stage-video { max-height: 78vh; }
 }
+
+/* ─── VIDEO.JS OVERRIDE ────────────────────────────── */
+.video-js {
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: #000 !important;
+}
+.video-js .vjs-tech { width: 100% !important; height: 100% !important; }
+.video-js .vjs-control-bar {
+  background: linear-gradient(transparent, rgba(0,0,0,0.7)) !important;
+  height: 36px !important;
+}
+.video-js .vjs-play-progress { background: #e30613 !important; }
+.video-js .vjs-volume-level { background: #e30613 !important; }
+.video-js .vjs-load-progress { background: rgba(255,255,255,0.15) !important; }
+.video-js .vjs-big-play-button {
+  border: 2px solid rgba(255,255,255,0.4) !important;
+  background: rgba(0,0,0,0.5) !important;
+  border-radius: 50% !important;
+  width: 48px !important; height: 48px !important;
+  line-height: 46px !important;
+  top: 50% !important; left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+}
+.video-js .vjs-big-play-button:hover { background: rgba(227,6,19,0.7) !important; }
+.video-js .vjs-live-control .vjs-live-display { font-family: var(--mono) !important; font-size: 10px !important; }
+.vjs-error .vjs-error-display { background: rgba(0,0,0,0.85) !important; }
+.vjs-error .vjs-error-display .vjs-modal-dialog-content { font-family: var(--body) !important; }
